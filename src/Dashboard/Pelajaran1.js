@@ -7,11 +7,11 @@ const Pelajaran1 = () => {
       {/* Sidebar muncul di sebelah kiri */}
       <Sidebar />
 
-      {/* Konten utama */}
+      Konten utama
       <div className="p-6 bg-white flex-grow-1 min-vh-100">
         {/* Judul */}
         <h1 className="text-2xl font-semibold mb-4">
-          [2024 - G1] Filosofi Pendidikan Indonesia PGSD 1 15197
+          {/* [2024 - G1] Filosofi Pendidikan Indonesia PGSD 1 15197 */}
         </h1>
 
         {/* Gambar Header */}
