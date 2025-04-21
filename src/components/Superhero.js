@@ -8,17 +8,17 @@ import supermanImage from "../assets/images/superhero/superman.jpg"
 
 const SuperHero = () => {
   return (
-    <div>
+    <div style={{ backgroundColor: "white" }}>
       <Container>
         <br />
-        <h1 className="text-white">SUPERHERO MOVIES</h1>
+        <h1 className="text-dark">SUPERHERO MOVIES</h1>
         <br />
         <Row>
           <Col md={4} className="movieWrapper" id="superhero">
             <Card className="movieImage">
               <Image src={antmanImage} alt="Dune Movies" className="images" />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">ANT MAN</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
@@ -34,8 +34,8 @@ const SuperHero = () => {
           <Col md={4} className="movieWrapper">
             <Card className="movieImage">
               <Image src={avengerImage} alt="Dune Movies" className="images" />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">AVENGER</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
@@ -51,8 +51,8 @@ const SuperHero = () => {
           <Col md={4} className="movieWrapper">
             <Card className="movieImage">
               <Image src={batmanImage} alt="Dune Movies" className="images" />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">THE BATMAN</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
@@ -72,8 +72,8 @@ const SuperHero = () => {
                 alt="Dune Movies"
                 className="images"
               />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">ROBIN HOOD</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
@@ -93,8 +93,8 @@ const SuperHero = () => {
                 alt="Dune Movies"
                 className="images"
               />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">SPIDERMAN</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
@@ -110,8 +110,8 @@ const SuperHero = () => {
           <Col md={4} className="movieWrapper">
             <Card className="movieImage">
               <Image src={supermanImage} alt="Dune Movies" className="images" />
-              <div className="bg-dark">
-                <div className="p-2 m-1 text-white">
+              <div className="bg-light">
+                <div className="p-2 m-1 text-dark">
                   <Card.Title className="text-center">SUPERMAN HERO</Card.Title>
                   <Card.Text className="text-left">
                     This is a wider card with natural lead-in to additional
