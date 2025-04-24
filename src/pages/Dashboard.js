@@ -1,77 +1,211 @@
-import React, { useState } from "react";
-import { Container, Row, Col, Card, Button } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar"; // ✅ Import Sidebar
+import React, { useState } from 'react';
+import Sidebar from '../pages/Sidebar';
 
-const courses = [
-  { title: "Filosofi Pendidikan Indonesia", code: "01.01.2", category: "Pelajaran 1", status: "Siswa", route: "/pelajaran1" },
-  { title: "Pembelajaran Berdiferensiasi", code: "SEL 07.2", category: "Pelajaran 2", status: "Siswa", route: "/pelajaran2" },
-  { title: "Filosofi Pendidikan Indonesia", code: "01.01.2", category: "Pelajaran 3", status: "Siswa", route: "/pelajaran3" },
-  { title: "Pembelajaran Berdiferensiasi", code: "SEL 07.2", category: "Pelajaran 4", status: "Siswa", route: "/pelajaran4" },
-  { title: "Filosofi Pendidikan Indonesia", code: "01.01.2", category: "Pelajaran 5", status: "Siswa", route: "/pelajaran5" },
-  { title: "Pembelajaran Berdiferensiasi", code: "SEL 07.2", category: "Pelajaran 6", status: "Siswa", route: "/pelajaran6" },
-  { title: "Filosofi Pendidikan Indonesia", code: "01.01.2", category: "Pelajaran 7", status: "Siswa", route: "/pelajaran7" },
-  { title: "Pembelajaran Berdiferensiasi", code: "SEL 07.2", category: "Pelajaran 8", status: "Siswa", route: "/pelajaran8" },
-  { title: "Pembelajaran Berdiferensiasi", code: "SEL 07.2", category: "Pelajaran 9", status: "Siswa", route: "/pelajaran9" },
-];
+const PelajaranAdmin = () => {
+  const [judul, setJudul] = useState('');
+  const [deskripsi, setDeskripsi] = useState('');
+  const [linkVideo, setLinkVideo] = useState('');
+  const [gambar, setGambar] = useState(null);
+  const [gambarPreview, setGambarPreview] = useState(null);
+  const [modul, setModul] = useState(null);
+  const [ppt, setPpt] = useState(null);
+  const [tugas, setTugas] = useState(null);
+  const [materiList, setMateriList] = useState([]);
 
-const Dashboard = () => {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [showAccount, setShowAccount] = useState(false);
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    navigate("/"); // Log out and navigate back to the home page
+  const handleFileChange = (event, setFile, isImage = false) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFile(file);
+      if (isImage && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            setGambarPreview(reader.result);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
   };
 
-  const handleCardClick = (route) => {
-    navigate(route); // Navigate to the appropriate Pelajaran page
+  const handleSubmit = () => {
+    const newMateri = {
+      id: Date.now(),
+      judul,
+      deskripsi,
+      linkVideo,
+      namaModul: modul?.name || null,
+      namaPpt: ppt?.name || null,
+      namaTugas: tugas?.name || null,
+    };
+    setMateriList([...materiList, newMateri]);
+    alert('Materi berhasil disimpan!');
+
+    // Reset form
+    setJudul('');
+    setDeskripsi('');
+    setLinkVideo('');
+    setGambar(null);
+    setGambarPreview(null);
+    setModul(null);
+    setPpt(null);
+    setTugas(null);
+  };
+
+  const handleDelete = (id) => {
+    const filtered = materiList.filter((m) => m.id !== id);
+    setMateriList(filtered);
   };
 
   return (
-    <div className="d-flex">
-      {/* Sidebar */}
-      <Sidebar onAccountClick={() => setShowAccount(!showAccount)} />
-
-      {/* Main Content */}
-      <div style={{ marginLeft: "70px", width: "100%" }}> {/* Adjust the margin to match sidebar width */}
-        <Container fluid className="p-4">
-          <h2 className="mb-4">Dashboard</h2>
-          <Row>
-            {courses.map((course, index) => (
-              <Col key={index} md={4} className="mb-3">
-                <Card className="shadow-sm" onClick={() => handleCardClick(course.route)}>
-                  <Card.Body className="bg-success text-white">
-                    <Card.Subtitle>{course.category}</Card.Subtitle>
-                    <Card.Title className="mt-2">{course.title}</Card.Title>
-                    <span className="badge bg-warning text-dark">{course.code}</span>
-                    <span className="badge bg-secondary ms-2">{course.status}</span>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </Container>
-
-        {/* Account Details Popup */}
-        {showAccount && (
-          <div className="position-fixed top-0 end-0 bg-white shadow p-4" style={{ width: "300px", height: "100vh" }}>
-            <h5 className="text-center">Catur Surya Saputra</h5>
-            <Button variant="danger" className="w-100" onClick={handleLogout}>Log out</Button>
-            <hr />
-            <ul className="list-unstyled">
-              <li>Notifications</li>
-              <li>Files</li>
-              <li>Settings</li>
-              <li>ePortfolios</li>
-              <li>Global Announcements</li>
-            </ul>
+    <div className="d-flex min-h-screen">
+      <Sidebar />
+  
+      <div className="flex-grow p-6 bg-gray-50 ml-[50px]">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">📚 Admin - Upload Materi Perkuliahan</h1>
+  
+        {/* Card Container */}
+        <div className="bg-white p-6 rounded-2xl shadow-md mb-10 max-w-full">
+          {/* Form Input */}
+          <div className="space-y-5">
+            <div>
+              <label className="block font-semibold mb-1">Judul</label>
+              <input
+                type="text"
+                value={judul}
+                onChange={(e) => setJudul(e.target.value)}
+                className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Masukkan Judul"
+              />
+            </div>
+  
+            <div>
+              <label className="block font-semibold mb-1">Foto</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileChange(e, setGambar, true)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              {gambarPreview && (
+                <img
+                  src={gambarPreview}
+                  alt="Preview"
+                  className="mt-2 rounded-md w-full max-w-md"
+                />
+              )}
+            </div>
+  
+            <div>
+              <label className="block font-semibold mb-1">Deskripsi</label>
+              <textarea
+                value={deskripsi}
+                onChange={(e) => setDeskripsi(e.target.value)}
+                rows={4}
+                className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Masukkan deskripsi mata kuliah"
+              ></textarea>
+            </div>
+  
+            <div>
+              <label className="block font-semibold mb-1">Link Video Pembelajaran</label>
+              <input
+                type="text"
+                value={linkVideo}
+                onChange={(e) => setLinkVideo(e.target.value)}
+                className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="https://youtube.com/..."
+              />
+            </div>
+  
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold mb-1">Upload Modul (PDF)</label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => handleFileChange(e, setModul)}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block font-semibold mb-1">Upload PPT</label>
+                <input
+                  type="file"
+                  accept=".ppt,.pptx"
+                  onChange={(e) => handleFileChange(e, setPpt)}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block font-semibold mb-1">Upload Tugas</label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => handleFileChange(e, setTugas)}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+            </div>
+  
+            <button
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+              onClick={handleSubmit}
+            >
+              Simpan Materi
+            </button>
           </div>
-        )}
+        </div>
+  
+        {/* Tabel Materi */}
+        <div className="overflow-x-auto">
+          <h2 className="text-xl font-semibold mb-4">📄 Daftar Materi</h2>
+          <table className="min-w-full table-auto border-collapse rounded-xl overflow-hidden">
+            <thead>
+              <tr className="bg-blue-100 text-blue-800">
+                <th className="px-4 py-3 border">Judul</th>
+                <th className="px-4 py-3 border">Deskripsi</th>
+                <th className="px-4 py-3 border">Video</th>
+                <th className="px-4 py-3 border">Modul</th>
+                <th className="px-4 py-3 border">PPT</th>
+                <th className="px-4 py-3 border">Tugas</th>
+                <th className="px-4 py-3 border">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white">
+              {materiList.map((materi, index) => (
+                <tr key={materi.id} className={index % 2 === 0 ? 'bg-gray-50' : ''}>
+                  <td className="px-4 py-3 border">{materi.judul}</td>
+                  <td className="px-4 py-3 border">{materi.deskripsi}</td>
+                  <td className="px-4 py-3 border">
+                    <a
+                      href={materi.linkVideo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      Lihat Video
+                    </a>
+                  </td>
+                  <td className="px-4 py-3 border">{materi.namaModul || '-'}</td>
+                  <td className="px-4 py-3 border">{materi.namaPpt || '-'}</td>
+                  <td className="px-4 py-3 border">{materi.namaTugas || '-'}</td>
+                  <td className="px-4 py-3 border">
+                    <button
+                      onClick={() => handleDelete(materi.id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default PelajaranAdmin;
