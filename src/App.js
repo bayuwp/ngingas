@@ -10,6 +10,7 @@ import MessagePanel from "./pages/MessagePanel.js";
 import Akun from "./pages/Akun.js";
 import Jadwal from "./pages/Jadwal.js";
 import Ujian from "./pages/Ujian.js";
+import Jual from "./pages/Jual.js";
 import Bantuan from "./pages/Bantuan.js"; 
 import Pelajaran1 from "./Dashboard/Pelajaran1.js";
 import Pelajaran2 from "./Dashboard/Pelajaran2.js";
@@ -38,6 +39,7 @@ function AppLayout() {
         <Route path="/akun" element={<Akun />} />
         <Route path="/jadwal" element={<Jadwal />} />
         <Route path="/ujian" element={<Ujian />} />
+        <Route path="/jual" element={<Jual />} />
         <Route path="/bantuan" element={<Bantuan />} />
         <Route path="/pelajaran1" element={<Pelajaran1 />} />
         <Route path="/pelajaran2" element={<Pelajaran2 />} />

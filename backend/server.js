@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
-import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
 
 const app = express();
 const prisma = new PrismaClient();
+
+app.use('/public', express.static('public'));
 
 // Konfigurasi CORS
 const corsOptions = {
@@ -17,15 +19,26 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Membuat direktori jika belum ada
+const directories = ['public/images', 'public/videos', 'public/pdfs', 'public/ppts'];
+
+directories.forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
+
 // Konfigurasi multer untuk menyimpan file
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
-      cb(null, 'public/images');
+      cb(null, 'public/images'); // Simpan gambar di folder public/images
+    } else if (file.mimetype.startsWith('video/')) {
+      cb(null, 'public/videos'); // Simpan video di folder public/videos
     } else if (file.mimetype === 'application/pdf') {
-      cb(null, 'public/pdfs');
+      cb(null, 'public/pdfs'); // Simpan PDF di folder public/pdfs
     } else if (file.mimetype.includes('presentation')) {
-      cb(null, 'public/ppts');
+      cb(null, 'public/ppts'); // Simpan PPT di folder public/ppts
     } else {
       cb(new Error('File type not supported'), null);
     }
@@ -79,10 +92,53 @@ app.delete('/api/materi/:id', async (req, res) => {
   }
 });
 
-// Endpoint untuk upload file
-app.post('/api/upload', upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).send('No file uploaded.');
+// Endpoint untuk upload file gambar dan video
+app.post('/api/upload', upload.fields([{ name: 'foto' }, { name: 'video' }]), (req, res) => {
+  const fotoPath = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
+  const videoPath = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
+
+  if (!fotoPath && !videoPath) {
+    return res.status(400).json({ error: 'No file uploaded.' });
   }
-  res.status(200).json({ filePath: `/assets/${req.file.filename}` });
+
+  res.status(200).json({
+    foto: fotoPath,
+    video: videoPath,
+  });
+});
+
+// Endpoint untuk menambahkan produk baru dengan file
+app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
+  console.log(req.body); // Log data yang diterima
+  console.log(req.files); // Log file yang diterima
+
+  const { namaProduk, kategori, deskripsi } = req.body;
+  const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
+  const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
+
+  try {
+    const newProduk = await prisma.produk.create({
+      data: {
+        namaProduk,
+        kategori,
+        deskripsi,
+        foto,
+        video,
+      },
+    });
+    res.status(201).json(newProduk);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Gagal menyimpan produk.' });
+  }
+});
+
+app.get('/api/produk', async (req, res) => {
+  try {
+    const produkList = await prisma.produk.findMany(); // Mengambil semua data produk dari database
+    res.json(produkList); // Mengembalikan data dalam format JSON
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Gagal mengambil data produk.' });
+  }
 });

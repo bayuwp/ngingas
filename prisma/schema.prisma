@@ -23,3 +23,14 @@ model Materi {
   namaTugas  String
   gambar     String
 }
+
+model Produk {
+  id          Int      @id @default(autoincrement())
+  namaProduk  String   @db.VarChar(255)
+  kategori    String   @db.VarChar(255)
+  deskripsi   String   @db.Text
+  foto        String?  @db.VarChar(255) // URL atau path file foto
+  video       String?  @db.VarChar(255) // URL atau path file video
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

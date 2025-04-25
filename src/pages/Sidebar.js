@@ -112,6 +112,19 @@ const Sidebar = ({ onAccountClick }) => {
           </li>
         </OverlayTrigger>
 
+        {/* ICON PENJUALAN */}
+        <OverlayTrigger placement="right" overlay={<Tooltip>Penjualan</Tooltip>}>
+          <li
+            className="mb-4 w-100 text-center"
+            style={hoverStyle}
+            onClick={() => navigate("/jual")}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            <FaClipboardList style={{ ...iconStyle, color: "#ffffff" }} />
+          </li>
+        </OverlayTrigger>
+
         <OverlayTrigger placement="right" overlay={<Tooltip>Akun</Tooltip>}>
           <li
             className="mt-auto w-100 text-center mb-3"
