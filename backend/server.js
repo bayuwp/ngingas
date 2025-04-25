@@ -11,7 +11,7 @@ app.use('/public', express.static('public'));
 
 // Konfigurasi CORS
 const corsOptions = {
-  origin: 'http://localhost:3001', // Izinkan hanya dari localhost:3000
+  origin: 'http://localhost:3000', // Izinkan hanya dari localhost:3000
   methods: ['GET', 'POST', 'DELETE'], // Metode HTTP yang diizinkan
   credentials: true, // Jika Anda menggunakan cookie
 };
@@ -140,5 +140,29 @@ app.get('/api/produk', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Gagal mengambil data produk.' });
+  }
+});
+
+app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
+  const { id } = req.params;
+  const { namaProduk, kategori, deskripsi } = req.body;
+  const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
+  const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
+
+  try {
+    const updatedProduk = await prisma.produk.update({
+      where: { id: parseInt(id) },
+      data: {
+        namaProduk,
+        kategori,
+        deskripsi,
+        ...(foto && { foto }),
+        ...(video && { video }),
+      },
+    });
+    res.status(200).json(updatedProduk);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Gagal memperbarui produk.' });
   }
 });

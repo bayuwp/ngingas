@@ -58,8 +58,12 @@ const Jual = () => {
                   });
 
             if (response.ok) {
-                const savedProduk = await response.json(); // Ambil data produk yang baru disimpan
-                setProdukList((prev) => [...prev, savedProduk]); // Tambahkan produk baru ke state
+                const savedProduk = await response.json();
+                setProdukList((prev) =>
+                    isEditing
+                        ? prev.map((produk) => (produk.id === savedProduk.id ? savedProduk : produk))
+                        : [...prev, savedProduk]
+                );
                 alert(isEditing ? "Produk berhasil diperbarui!" : "Produk berhasil disimpan!");
                 setFormData({
                     foto: null,
