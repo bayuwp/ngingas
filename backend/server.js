@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import multer from 'multer';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 
 const app = express();
@@ -7,15 +9,35 @@ const prisma = new PrismaClient();
 
 // Konfigurasi CORS
 const corsOptions = {
-  origin: 'http://localhost:3000', // Izinkan hanya dari localhost:3000
+  origin: 'http://localhost:3001', // Izinkan hanya dari localhost:3000
   methods: ['GET', 'POST', 'DELETE'], // Metode HTTP yang diizinkan
   credentials: true, // Jika Anda menggunakan cookie
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
-const PORT = process.env.PORT || 5001
-;
+
+// Konfigurasi multer untuk menyimpan file
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, 'public/images');
+    } else if (file.mimetype === 'application/pdf') {
+      cb(null, 'public/pdfs');
+    } else if (file.mimetype.includes('presentation')) {
+      cb(null, 'public/ppts');
+    } else {
+      cb(new Error('File type not supported'), null);
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
 });
@@ -55,4 +77,12 @@ app.delete('/api/materi/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Gagal menghapus materi' });
   }
+});
+
+// Endpoint untuk upload file
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+  res.status(200).json({ filePath: `/assets/${req.file.filename}` });
 });

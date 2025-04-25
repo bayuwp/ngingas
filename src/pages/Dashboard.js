@@ -44,8 +44,36 @@ const PelajaranAdmin = () => {
     }
   };
 
+  const handleFileUpload = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.filePath; // URL file yang diunggah
+      } else {
+        alert('Gagal mengunggah file');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      alert('Terjadi kesalahan saat mengunggah file.');
+      return null;
+    }
+  };
+
   const handleSubmit = async () => {
     try {
+      const uploadedImage = gambar ? await handleFileUpload(gambar) : null;
+      const uploadedModul = modul ? await handleFileUpload(modul) : null;
+      const uploadedPpt = ppt ? await handleFileUpload(ppt) : null;
+  
       const response = await fetch(`${BACKEND_URL}/api/materi`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,18 +81,17 @@ const PelajaranAdmin = () => {
           judul,
           deskripsi,
           linkVideo,
-          namaModul: modul?.name || null,
-          namaPpt: ppt?.name || null,
-          namaTugas: tugas?.name || null,
-          gambar: gambar ? gambar.name : null,
+          gambar: uploadedImage,
+          namaModul: uploadedModul,
+          namaPpt: uploadedPpt,
+          namaTugas: tugas ? tugas.name : null,
         }),
       });
-
+  
       if (response.ok) {
         const newMateri = await response.json();
         setMateriList([...materiList, newMateri]);
         alert('Materi berhasil disimpan!');
-
         // Reset form
         setJudul('');
         setDeskripsi('');
