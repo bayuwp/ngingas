@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import Sidebar from '../pages/Sidebar';
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../pages/Sidebar.js';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const PelajaranAdmin = () => {
   const [judul, setJudul] = useState('');
@@ -11,6 +13,20 @@ const PelajaranAdmin = () => {
   const [ppt, setPpt] = useState(null);
   const [tugas, setTugas] = useState(null);
   const [materiList, setMateriList] = useState([]);
+
+  useEffect(() => {
+    const fetchMateri = async () => {
+      try {
+        const response = await fetch(`${BACKEND_URL}/api/materi`);
+        const data = await response.json();
+        setMateriList(data);
+      } catch (error) {
+        console.error('Gagal mengambil data materi:', error);
+      }
+    };
+
+    fetchMateri();
+  }, []);
 
   const handleFileChange = (event, setFile, isImage = false) => {
     const file = event.target.files?.[0];
@@ -28,33 +44,62 @@ const PelajaranAdmin = () => {
     }
   };
 
-  const handleSubmit = () => {
-    const newMateri = {
-      id: Date.now(),
-      judul,
-      deskripsi,
-      linkVideo,
-      namaModul: modul?.name || null,
-      namaPpt: ppt?.name || null,
-      namaTugas: tugas?.name || null,
-    };
-    setMateriList([...materiList, newMateri]);
-    alert('Materi berhasil disimpan!');
+  const handleSubmit = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/materi`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          judul,
+          deskripsi,
+          linkVideo,
+          namaModul: modul?.name || null,
+          namaPpt: ppt?.name || null,
+          namaTugas: tugas?.name || null,
+          gambar: gambar ? gambar.name : null,
+        }),
+      });
 
-    // Reset form
-    setJudul('');
-    setDeskripsi('');
-    setLinkVideo('');
-    setGambar(null);
-    setGambarPreview(null);
-    setModul(null);
-    setPpt(null);
-    setTugas(null);
+      if (response.ok) {
+        const newMateri = await response.json();
+        setMateriList([...materiList, newMateri]);
+        alert('Materi berhasil disimpan!');
+
+        // Reset form
+        setJudul('');
+        setDeskripsi('');
+        setLinkVideo('');
+        setGambar(null);
+        setGambarPreview(null);
+        setModul(null);
+        setPpt(null);
+        setTugas(null);
+      } else {
+        alert('Gagal menyimpan materi');
+      }
+    } catch (error) {
+      console.error('Gagal menyimpan materi:', error);
+      alert('Terjadi kesalahan saat menyimpan materi.');
+    }
   };
 
-  const handleDelete = (id) => {
-    const filtered = materiList.filter((m) => m.id !== id);
-    setMateriList(filtered);
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/materi/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const filtered = materiList.filter((m) => m.id !== id);
+        setMateriList(filtered);
+        alert('Materi berhasil dihapus!');
+      } else {
+        alert('Gagal menghapus materi');
+      }
+    } catch (error) {
+      console.error('Gagal menghapus materi:', error);
+      alert('Terjadi kesalahan saat menghapus materi.');
+    }
   };
 
   return (

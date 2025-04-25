@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Container, Row, Col, Dropdown } from "react-bootstrap";
 import { FaEnvelope } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar"; // ✅ Import Sidebar
+import Sidebar from "./Sidebar.js"; // ✅ Import Sidebar
 
 
 const MessagePanel = () => {

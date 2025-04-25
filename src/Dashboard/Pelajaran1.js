@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Sidebar from '../pages/Sidebar';
+import Sidebar from '../pages/Sidebar.js';
 
 const PelajaranAdmin = () => {
   const [judul, setJudul] = useState('');

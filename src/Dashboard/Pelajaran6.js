@@ -1,5 +1,5 @@
 import React from 'react';
-import Sidebar from '../pages/Sidebar'; // ✅ Benar
+import Sidebar from '../pages/Sidebar.js'; // ✅ Benar
 
 const Pelajaran1 = () => {
   return (

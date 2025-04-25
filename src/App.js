@@ -1,25 +1,25 @@
 // Semua import harus berada di atas sebelum kode lainnya
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import NavigationBar from "./components/NavigationBar";
-import HalamanAwal from "./pages/HalamanAwal";
-import TentangDesa from "./pages/TentangDesa";
-import KaryaSiswa from "./pages/KaryaSiswa";
-import Masuk from "./pages/Masuk";
-import Dashboard from "./pages/Dashboard";
-import MessagePanel from "./pages/MessagePanel";
-import Akun from "./pages/Akun";
-import Jadwal from "./pages/Jadwal";
-import Ujian from "./pages/Ujian";
-import Bantuan from "./pages/Bantuan"; 
-import Pelajaran1 from "./Dashboard/Pelajaran1";
-import Pelajaran2 from "./Dashboard/Pelajaran2";
-import Pelajaran3 from "./Dashboard/Pelajaran3";  
-import Pelajaran4 from "./Dashboard/Pelajaran4";  
-import Pelajaran5 from "./Dashboard/Pelajaran5";  
-import Pelajaran6 from "./Dashboard/Pelajaran6";  
-import Pelajaran7 from "./Dashboard/Pelajaran7";  
-import Pelajaran8 from "./Dashboard/Pelajaran8";  
-import Pelajaran9 from "./Dashboard/Pelajaran9";  
+import NavigationBar from "./components/NavigationBar.js";
+import HalamanAwal from "./pages/HalamanAwal.js";
+import TentangDesa from "./pages/TentangDesa.js";
+import KaryaSiswa from "./pages/KaryaSiswa.js";
+import Masuk from "./pages/Masuk.js";
+import Dashboard from "./pages/Dashboard.js";
+import MessagePanel from "./pages/MessagePanel.js";
+import Akun from "./pages/Akun.js";
+import Jadwal from "./pages/Jadwal.js";
+import Ujian from "./pages/Ujian.js";
+import Bantuan from "./pages/Bantuan.js"; 
+import Pelajaran1 from "./Dashboard/Pelajaran1.js";
+import Pelajaran2 from "./Dashboard/Pelajaran2.js";
+import Pelajaran3 from "./Dashboard/Pelajaran3.js";  
+import Pelajaran4 from "./Dashboard/Pelajaran4.js";  
+import Pelajaran5 from "./Dashboard/Pelajaran5.js";  
+import Pelajaran6 from "./Dashboard/Pelajaran6.js";  
+import Pelajaran7 from "./Dashboard/Pelajaran7.js";  
+import Pelajaran8 from "./Dashboard/Pelajaran8.js";  
+import Pelajaran9 from "./Dashboard/Pelajaran9.js";  
 
 function AppLayout() {
   const location = useLocation();

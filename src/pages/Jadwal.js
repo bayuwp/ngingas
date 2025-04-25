@@ -5,7 +5,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import moment from "moment";
-import Sidebar from "./Sidebar"; // pastikan path-nya benar
+import Sidebar from "./Sidebar.js"; // pastikan path-nya benar
 
 const localizer = momentLocalizer(moment);
 
