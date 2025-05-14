@@ -5,9 +5,12 @@ const NavigationBar = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Hook untuk mendapatkan lokasi saat ini
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State untuk mengontrol dropdown
+  const [fotoProfil, setFotoProfil] = useState("/path/to/default-avatar.png"); // Default foto profil
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Hapus token dari localStorage
+    localStorage.removeItem("auth_token"); // Hapus token dari localStorage
+    localStorage.removeItem("role"); // Hapus role dari localStorage
+    localStorage.removeItem("user_id"); // Hapus username dari localStorage
     navigate("/masuk"); // Arahkan ke halaman login
     setIsDropdownOpen(false); // Tutup dropdown
   };
@@ -16,6 +19,28 @@ const NavigationBar = () => {
   useEffect(() => {
     setIsDropdownOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/api/profile", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Kirim token jika diperlukan
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFotoProfil(data.foto || "/path/to/default-avatar.png"); // Gunakan foto dari database atau default
+        } else {
+          console.error("Gagal mengambil data profil");
+        }
+      } catch (error) {
+        console.error("Error saat mengambil data profil:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   return (
     <nav style={styles.navbar}>
@@ -40,6 +65,9 @@ const NavigationBar = () => {
         <Link to="/karya" style={styles.navLink}>
           Karya
         </Link>
+        <Link to="/tentang-desa" style={styles.navLink}> {/* Link baru */}
+          Tentang Desa
+        </Link>
       </div>
 
       {/* Profil dan Dropdown */}
@@ -49,7 +77,7 @@ const NavigationBar = () => {
           onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
         >
           <img
-            src="/path/to/profile.png" // Ganti dengan path foto profil Anda
+            src={`http://localhost:5001${fotoProfil}`} // Ganti dengan URL foto profil yang sesuai
             alt="Profil"
             style={styles.profileImage}
           />

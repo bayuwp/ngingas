@@ -11,28 +11,32 @@ const Masuk = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5001/api/login", {
-        method: "POST",
+      const response = await fetch(`http://localhost:5001/api/login`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("token", data.token); // Simpan token di localStorage
-        localStorage.setItem("role", data.role); // Simpan role di localStorage
-
-        // Arahkan pengguna berdasarkan role
+      
+      const data = await response.json();
+      
+      // Cek apakah login berhasil dan simpan token di localStorage
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token); // Menyimpan token di localStorage
+        localStorage.setItem('role', data.role); // Menyimpan role di localStorage
+        localStorage.setItem('user_id', data.id); // Menyimpan username di localStorage
+        console.log('Login berhasil');
         if (data.role === "admin") {
-          navigate("/admin/dashboard"); // Halaman admin
-        } else {
-          navigate("/dashboard"); // Halaman user
+          navigate("/admin/dashboard"); // Arahkan ke dashboard admin jika role admin
+        } else if (data.role === "user") {
+          navigate("/dashboard"); // Arahkan ke dashboard user jika role user
         }
       } else {
-        const errorData = await response.json();
-        alert(errorData.error || "Gagal login.");
+        console.error('Login gagal');
       }
     } catch (error) {
       console.error("Error:", error);

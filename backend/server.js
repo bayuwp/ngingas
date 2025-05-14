@@ -18,25 +18,29 @@ const prisma = new PrismaClient();
 const SECRET_KEY = 'your_secret_key'; // Ganti dengan secret key Anda
 
 // Middleware untuk memeriksa autentikasi dan role admin
-const authenticateAdmin = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Akses ditolak. Token tidak ditemukan.' });
+const authenticated = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token tidak ditemukan di authenticated' });
   }
+
+  const token = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
     const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
-    if (user && user.role === 'admin') {
-      req.user = user;
-      next();
-    } else {
-      res.status(403).json({ error: 'Akses ditolak. Anda bukan admin.' });
+    if (!user) {
+      return res.status(404).json({ error: 'User tidak ditemukan' });
     }
+
+    // Simpan user ke dalam req untuk digunakan di handler route
+    req.headers.user = user;
+    console.log("req headers user", req.headers.user); // Menampilkan user di console
+
+    next();
   } catch (error) {
-    res.status(401).json({ error: 'Token tidak valid.' });
+    res.status(401).json({ error: 'Token tidak valid' });
   }
 };
 
@@ -69,19 +73,20 @@ directories.forEach((dir) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
-      cb(null, 'public/images'); // Simpan gambar di folder public/images
+      cb(null, 'public/images');
     } else if (file.mimetype.startsWith('video/')) {
-      cb(null, 'public/videos'); // Simpan video di folder public/videos
+      cb(null, 'public/videos');
     } else if (file.mimetype === 'application/pdf') {
-      cb(null, 'public/pdfs'); // Simpan PDF di folder public/pdfs
+      cb(null, 'public/pdfs');
     } else if (file.mimetype.includes('presentation')) {
-      cb(null, 'public/ppts'); // Simpan PPT di folder public/ppts
+      cb(null, 'public/ppts');
     } else {
       cb(new Error('File type not supported'), null);
     }
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    const originalName = file.originalname.replace(/\s+/g, '-');
+    cb(null, `${Date.now()}-${originalName}`);
   },
 });
 
@@ -104,20 +109,39 @@ app.get('/api/materi', async (req, res) => {
 });
 
 // Endpoint untuk menambahkan materi baru
-app.post('/api/materi', async (req, res) => {
-  const { judul, deskripsi, linkVideo, namaModul, namaPpt, namaTugas, gambar } = req.body;
-  
-  console.log("req", req.body); // Menampilkan request body di console
+app.post('/api/materi', upload.fields([
+  { name: 'foto' },
+  { name: 'modul' },
+  { name: 'ppt' },
+  { name: 'tugas' }
+]), async (req, res) => {
   try {
+    const { judul, deskripsi, linkVideo } = req.body;
+
+    const gambarPath = req.files['foto'] ? req.files['foto'][0].filename : null;
+    const namaModul = req.files['modul'] ? req.files['modul'][0].filename : null;
+    const namaPpt = req.files['ppt'] ? req.files['ppt'][0].filename : null;
+    const namaTugas = req.files['tugas'] ? req.files['tugas'][0].filename : null;
+
     const newMateri = await prisma.materi.create({
-      data: { judul, deskripsi, linkVideo, namaModul, namaPpt, namaTugas, gambar },
+      data: {
+        judul,
+        deskripsi,
+        linkVideo,
+        namaModul,
+        namaPpt,
+        namaTugas,
+        gambar: gambarPath,
+      }
     });
+
     res.status(201).json(newMateri);
-  } catch (error) {
-    console.log("error", error); // Menampilkan error di console
+  } catch (err) {
+    console.error("Error saat menyimpan materi:", err);
     res.status(500).json({ error: 'Gagal menyimpan materi' });
   }
 });
+
 
 // Endpoint untuk menghapus materi
 app.delete('/api/materi/:id', async (req, res) => {
@@ -144,6 +168,35 @@ app.post('/api/upload', upload.fields([{ name: 'foto' }, { name: 'video' }]), (r
     video: videoPath,
   });
 });
+
+app.post('/api/upload/materi', upload.fields([
+  { name: 'foto' },
+  { name: 'modul' },
+  { name: 'ppt' },
+  { name: 'tugas' }
+]), (req, res) => {
+  try {
+    const gambarPath = req.files['foto'] ? `/uploads/${req.files['foto'][0].filename}` : null;
+    const modulPath = req.files['modul'] ? `/uploads/${req.files['modul'][0].filename}` : null;
+    const pptPath = req.files['ppt'] ? `/uploads/${req.files['ppt'][0].filename}` : null;
+    const tugasPath = req.files['tugas'] ? `/uploads/${req.files['tugas'][0].filename}` : null;
+
+    if (!gambarPath && !modulPath && !pptPath && !tugasPath) {
+      return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    return res.status(200).json({
+      gambar: gambarPath,
+      modul: modulPath,
+      ppt: pptPath,
+      tugas: tugasPath
+    });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: 'Upload failed.' });
+  }
+});
+
 
 // Endpoint untuk menambahkan produk baru dengan file
 app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
@@ -208,6 +261,11 @@ app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]),
 app.post('/api/register', async (req, res) => {
   const { username, password } = req.body;
 
+  // Validasi input
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username dan password harus diisi' });
+  }
+
   try {
     // Periksa apakah username sudah ada
     const existingUser = await prisma.user.findUnique({ where: { username } });
@@ -228,7 +286,17 @@ app.post('/api/register', async (req, res) => {
       },
     });
 
-    res.status(201).json({ message: 'Registrasi berhasil', user: newUser });
+    const newProfile = await prisma.profile.create({
+      data: {
+        userId: newUser.id,
+        username: username, 
+        kelas: '', // Atau ambil dari input jika ada
+        jurusan: '', // Atau ambil dari input jika ada
+        foto: null, // Atau ambil dari input jika ada
+      },
+    });
+
+    res.status(201).json({ message: 'Registrasi berhasil', user: newUser, profile: newProfile });
   } catch (error) {
     console.error('Error saat registrasi:', error);
     res.status(500).json({ error: 'Gagal registrasi' });
@@ -260,13 +328,91 @@ app.post('/api/login', async (req, res) => {
 
     const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
 
-    res.status(200).json({ message: 'Login berhasil', token, role: user.role });
+    res.status(200).json({ message: 'Login berhasil', token, role: user.role, id: user.id });
   } catch (error) {
     console.error('Error saat login:', error);
     res.status(500).json({ error: 'Gagal login' });
   }
 });
 
-app.get('/api/admin/dashboard', authenticateAdmin, (req, res) => {
+app.get('/api/admin/dashboard', authenticated, (req, res) => {
   res.status(200).json({ message: 'Selamat datang di dashboard admin!' });
+});
+
+app.post("/api/profile", authenticated, upload.single("foto"), async (req, res) => {
+  // Ambil data dari request body dan file yang diupload
+  console.log("Request body:", req.body); // Menampilkan request body di console
+
+  const { nama, kelas, jurusan } = req.body;
+  const fotoPath = req.file ? `/images/${req.file.filename}` : null; // Jika ada file, ambil path file
+
+  try {
+    // Verifikasi apakah pengguna sudah terotentikasi dan memiliki ID
+    if (!req.headers.user || !req.headers.user.id) {
+      return res.status(401).json({ error: 'User tidak terotentikasi' });
+    }
+
+    // Perbarui atau buat profil baru dengan menggunakan upsert
+    const updatedProfile = await prisma.profile.upsert({
+      where: { userId: req.headers.user.id }, // Gunakan ID pengguna dari token (pastikan token valid)
+      update: {
+        username: nama,
+        kelas,
+        jurusan,
+        foto: fotoPath || undefined, // Perbarui hanya jika ada foto baru
+      },
+      create: {
+        userId: req.headers.user.id, // Buat profil baru jika belum ada
+        username: nama,
+        kelas,
+        jurusan,
+        foto: fotoPath, // Masukkan foto jika ada
+      },
+    });
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.headers.user.id },
+      data: {
+        username: nama,
+        password: req.headers.user.password, // Pastikan untuk tidak mengubah password
+      },
+    });
+
+    res.status(200).json([
+      updatedProfile,
+      updatedUser,
+    ]); // Kembalikan data profil yang diperbarui
+  } catch (error) {
+    console.error("Error saat menyimpan profil:", error);
+    res.status(500).json({ error: "Gagal menyimpan profil" });
+  }
+});
+
+app.get("/api/profile", authenticated, async (req, res) => {
+  try {
+    // Ambil token dari header Authorization
+    console.log("headers req di line 354", req.headers); // Menampilkan user di console
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Token tidak ditemukan' });
+    }
+
+    // Verifikasi token dan ambil payload (userId)
+    // const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = req.headers.user.id; // Asumsikan bahwa id ada di dalam payload
+
+    // Ambil profile pengguna berdasarkan userId
+    const profile = await prisma.profile.findUnique({
+      where: { id: userId }, // Gunakan userId, bukan id
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: "Profil tidak ditemukan" });
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error("Error saat mengambil profil:", error);
+    res.status(500).json({ error: "Gagal mengambil profil" });
+  }
 });

@@ -4,10 +4,9 @@ import { FaRemoveFormat } from "react-icons/fa";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Karya = () => {
-  const [produkList, setProdukList] = useState([]); // Daftar produk
-  const [selectedProduk, setSelectedProduk] = useState(null); // Produk yang dipilih
+  const [produkList, setProdukList] = useState([]);
+  const [selectedProduk, setSelectedProduk] = useState(null);
 
-  // Ambil data produk dari backend
   useEffect(() => {
     const fetchProduk = async () => {
       try {
@@ -22,9 +21,8 @@ const Karya = () => {
     fetchProduk();
   }, []);
 
-  // Fungsi untuk membuat tautan WhatsApp
   const generateWhatsAppLink = (produk) => {
-    const phoneNumber = "628123456789"; // Ganti dengan nomor WhatsApp Anda
+    const phoneNumber = "628123456789";
     const message = `Halo, saya tertarik dengan produk "${produk.judul}". Apakah masih tersedia?`;
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   };
@@ -33,7 +31,6 @@ const Karya = () => {
     <div style={{ padding: "20px" }}>
       <h1 style={{ textAlign: "center", marginBottom: "20px", color: "#004080" }}>Karya</h1>
 
-      {/* Jika tidak ada produk yang dipilih, tampilkan daftar produk */}
       {!selectedProduk ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", justifyContent: "center" }}>
           {produkList.map((produk) => (
@@ -50,7 +47,7 @@ const Karya = () => {
                 backgroundColor: "#f9f9f9",
                 transition: "transform 0.2s, box-shadow 0.2s",
               }}
-              onClick={() => setSelectedProduk(produk)} // Pilih produk
+              onClick={() => setSelectedProduk(produk)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.05)";
                 e.currentTarget.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.2)";
@@ -61,7 +58,7 @@ const Karya = () => {
               }}
             >
               <img
-                src={`${BACKEND_URL}/public${produk.gambar}`}
+                src={`${BACKEND_URL}${produk.foto}`}
                 alt={produk.judul}
                 style={{
                   width: "100%",
@@ -81,9 +78,9 @@ const Karya = () => {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
-                title={produk.judul} // Tooltip untuk judul lengkap
+                title={produk.namaProduk}
               >
-                {produk.judul}
+                {produk.namaProduk}
               </h3>
               <p style={{ color: "#555", fontSize: "0.9rem" }}>
                 {produk.deskripsi.substring(0, 100)}...
@@ -92,10 +89,9 @@ const Karya = () => {
           ))}
         </div>
       ) : (
-        // Jika ada produk yang dipilih, tampilkan detail produk
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <button
-            onClick={() => setSelectedProduk(null)} // Kembali ke daftar produk
+            onClick={() => setSelectedProduk(null)}
             style={{
               marginBottom: "20px",
               padding: "10px 20px",
@@ -108,10 +104,12 @@ const Karya = () => {
           >
             Kembali
           </button>
-          <h2 style={{ color: "#004080" }}>{selectedProduk.judul}</h2>
+
+          <h2 style={{ color: "#004080" }}>{selectedProduk.namaProduk}</h2>
+
           <img
-            src={`${BACKEND_URL}/${selectedProduk.gambar}`}
-            alt={selectedProduk.judul}
+            src={`${BACKEND_URL}${selectedProduk.foto}`}
+            alt={selectedProduk.namaProduk}
             style={{
               width: "100%",
               maxHeight: "400px",
@@ -120,7 +118,28 @@ const Karya = () => {
               marginBottom: "20px",
             }}
           />
+
+          {/* Tampilkan video jika tersedia */}
+          {selectedProduk.video && (
+            <div style={{ marginBottom: "20px" }}>
+              <h3 style={{ color: "#004080", marginBottom: "10px" }}>Video Karya</h3>
+              <video
+                controls
+                style={{
+                  width: "100%",
+                  maxHeight: "400px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                }}
+              >
+                <source src={`${BACKEND_URL}${selectedProduk.video}`} type="video/mp4" />
+                Browser Anda tidak mendukung pemutar video.
+              </video>
+            </div>
+          )}
+
           <p>{selectedProduk.deskripsi}</p>
+
           {selectedProduk.link && (
             <div style={{ marginTop: "20px" }}>
               <h4>Link Terkait:</h4>
@@ -134,7 +153,7 @@ const Karya = () => {
               </a>
             </div>
           )}
-          {/* Tombol Keranjang */}
+
           <a
             href={generateWhatsAppLink(selectedProduk)}
             target="_blank"
@@ -143,7 +162,7 @@ const Karya = () => {
               display: "inline-block",
               marginTop: "20px",
               padding: "10px 20px",
-              backgroundColor: "#25D366", // Warna hijau khas WhatsApp
+              backgroundColor: "#25D366",
               color: "#fff",
               textDecoration: "none",
               borderRadius: "4px",

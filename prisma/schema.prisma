@@ -14,14 +14,15 @@ datasource db {
 }
 
 model Materi {
-  id         Int      @id @default(autoincrement())
-  judul      String
-  deskripsi  String
-  linkVideo  String
-  namaModul  String
-  namaPpt    String
-  namaTugas  String
-  gambar     String
+  id        Int      @id @default(autoincrement())
+  judul     String
+  deskripsi String
+  linkVideo String?
+  namaModul String    // Properti ini tidak boleh null
+  namaPpt   String?
+  namaTugas String?
+  gambar    String?
+  createdAt DateTime @default(now())
 }
 
 model Produk {
@@ -36,9 +37,23 @@ model Produk {
 }
 
 model User {
-  id       Int      @id @default(autoincrement())
-  username String   @unique
-  password String
-  role     String   @default("user") // Role untuk membedakan user/admin
-  createdAt DateTime @default(now())
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  role      String    @default("user") // Role untuk membedakan user/admin
+  createdAt DateTime  @default(now())
+
+  profile   Profile?
+}
+
+model Profile {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  foto      String?   // URL foto profil
+  kelas     String
+  jurusan   String
+  createdAt DateTime  @default(now())
+
+  userId    Int       @unique
+  user      User      @relation(fields: [userId], references: [id])
 }

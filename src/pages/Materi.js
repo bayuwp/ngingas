@@ -3,10 +3,9 @@ import React, { useState, useEffect } from "react";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Materi = () => {
-  const [materiList, setMateriList] = useState([]); // Daftar materi
-  const [selectedMateri, setSelectedMateri] = useState(null); // Materi yang dipilih
+  const [materiList, setMateriList] = useState([]);
+  const [selectedMateri, setSelectedMateri] = useState(null);
 
-  // Ambil data materi dari backend
   useEffect(() => {
     const fetchMateri = async () => {
       try {
@@ -21,11 +20,37 @@ const Materi = () => {
     fetchMateri();
   }, []);
 
+  // Fungsi untuk embed YouTube
+  const renderVideo = (url) => {
+    const youtubeMatch = url.match(
+      /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/
+    );
+    if (youtubeMatch) {
+      const videoId = youtubeMatch[1];
+      return (
+        <iframe
+          width="100%"
+          height="400"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          frameBorder="0"
+          allowFullScreen
+          title="Video Pembelajaran"
+          style={{ borderRadius: "8px" }}
+        ></iframe>
+      );
+    }
+    return (
+      <video controls style={{ maxWidth: "100%", borderRadius: "8px" }}>
+        <source src={url} type="video/mp4" />
+        Browser Anda tidak mendukung video.
+      </video>
+    );
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h1 style={{ textAlign: "center", marginBottom: "20px", color: "#004080" }}>Materi</h1>
 
-      {/* Jika tidak ada materi yang dipilih, tampilkan daftar materi */}
       {!selectedMateri ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", justifyContent: "center" }}>
           {materiList.map((materi) => (
@@ -42,7 +67,7 @@ const Materi = () => {
                 backgroundColor: "#f9f9f9",
                 transition: "transform 0.2s, box-shadow 0.2s",
               }}
-              onClick={() => setSelectedMateri(materi)} // Pilih materi
+              onClick={() => setSelectedMateri(materi)}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.05)";
                 e.currentTarget.style.boxShadow = "0 6px 12px rgba(0, 0, 0, 0.2)";
@@ -62,21 +87,22 @@ const Materi = () => {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
-                title={materi.judul} // Tooltip untuk judul lengkap
+                title={materi.judul}
               >
                 {materi.judul}
               </h3>
               <p style={{ color: "#555", fontSize: "0.9rem" }}>
-                {materi.deskripsi.substring(0, 100)}...
+                {materi.deskripsi.length > 100
+                  ? `${materi.deskripsi.substring(0, 100)}...`
+                  : materi.deskripsi}
               </p>
             </div>
           ))}
         </div>
       ) : (
-        // Jika ada materi yang dipilih, tampilkan detail materi
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <button
-            onClick={() => setSelectedMateri(null)} // Kembali ke daftar materi
+            onClick={() => setSelectedMateri(null)}
             style={{
               marginBottom: "20px",
               padding: "10px 20px",
@@ -91,21 +117,23 @@ const Materi = () => {
           </button>
           <h2 style={{ color: "#004080" }}>{selectedMateri.judul}</h2>
           <p>{selectedMateri.deskripsi}</p>
+
           {selectedMateri.gambar && (
             <div style={{ marginTop: "20px" }}>
               <h4>Gambar:</h4>
               <img
-                src={`${BACKEND_URL}/images/${selectedMateri.gambar}`} // Ambil dari folder public/images
+                src={`${BACKEND_URL}/images/${selectedMateri.gambar}`}
                 alt={selectedMateri.judul}
                 style={{ maxWidth: "100%", borderRadius: "8px" }}
               />
             </div>
           )}
+
           {selectedMateri.namaModul && (
             <div style={{ marginTop: "20px" }}>
               <h4>Modul:</h4>
               <a
-                href={`${BACKEND_URL}/pdfs/${selectedMateri.namaModul}`} // Ambil dari folder public/pdfs
+                href={`${BACKEND_URL}/pdfs/${selectedMateri.namaModul}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#004080", textDecoration: "underline" }}
@@ -114,11 +142,12 @@ const Materi = () => {
               </a>
             </div>
           )}
+
           {selectedMateri.namaPpt && (
             <div style={{ marginTop: "20px" }}>
               <h4>PPT:</h4>
               <a
-                href={`${BACKEND_URL}/ppts/${selectedMateri.namaPpt}`} // Ambil dari folder public/ppts
+                href={`${BACKEND_URL}/ppts/${selectedMateri.namaPpt}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#004080", textDecoration: "underline" }}
@@ -127,11 +156,12 @@ const Materi = () => {
               </a>
             </div>
           )}
+
           {selectedMateri.namaTugas && (
             <div style={{ marginTop: "20px" }}>
               <h4>Tugas:</h4>
               <a
-                href={`${BACKEND_URL}/pdfs/${selectedMateri.namaTugas}`} // Ambil dari folder public/pdfs
+                href={`${BACKEND_URL}/pdfs/${selectedMateri.namaTugas}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ color: "#004080", textDecoration: "underline" }}
@@ -140,16 +170,11 @@ const Materi = () => {
               </a>
             </div>
           )}
+
           {selectedMateri.linkVideo && (
             <div style={{ marginTop: "20px" }}>
               <h4>Video Pembelajaran:</h4>
-              <video
-                controls
-                style={{ maxWidth: "100%", borderRadius: "8px" }}
-              >
-                <source src={`${BACKEND_URL}/videos/${selectedMateri.linkVideo}`} type="video/mp4" />
-                Browser Anda tidak mendukung video.
-              </video>
+              {renderVideo(selectedMateri.linkVideo)}
             </div>
           )}
         </div>

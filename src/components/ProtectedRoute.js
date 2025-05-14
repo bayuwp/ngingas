@@ -1,21 +1,22 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const token = localStorage.getItem("token"); // Periksa token
-  const role = localStorage.getItem("role"); // Periksa role
+  const token = localStorage.getItem("auth_token");
+  const role = localStorage.getItem("role");
+  const location = useLocation();
 
-  if (!token) {
-    // Jika belum login, arahkan ke halaman login
-    return <Navigate to="/masuk" />;
+  // Tidak ada token = belum login
+  if (!token || token === "undefined" || token === "null") {
+    return <Navigate to="/masuk" state={{ from: location }} replace />;
   }
 
+  // Cek role jika diperlukan
   if (requiredRole && role !== requiredRole) {
-    // Jika role tidak sesuai, arahkan ke halaman yang sesuai
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/" replace />;
   }
 
-  // Jika sudah login dan role sesuai, tampilkan halaman
+  // Jika lolos semua validasi
   return children;
 };
 

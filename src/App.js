@@ -34,12 +34,13 @@ function AppLayout() {
 
   return (
     <>
-      {!hideNavbar && <NavigationBar />} {/* Navbar akan muncul di semua halaman kecuali /masuk dan /register */}
+      {!hideNavbar && <NavigationBar />}
       <Routes>
         <Route path="/" element={<HalamanAwal />} />
         <Route path="/tentang-desa" element={<TentangDesa />} />
         <Route path="/masuk" element={<Masuk />} />
         <Route path="/register" element={<Register />} />
+
         {/* Halaman untuk admin */}
         <Route
           path="/admin/dashboard"
@@ -49,6 +50,15 @@ function AppLayout() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/jual"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <Jual />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Halaman untuk user */}
         <Route
           path="/dashboard"
@@ -58,11 +68,11 @@ function AppLayout() {
             </ProtectedRoute>
           }
         />
+
         <Route path="/pesan" element={<MessagePanel />} />
         <Route path="/akun" element={<Akun />} />
         <Route path="/jadwal" element={<Jadwal />} />
         <Route path="/ujian" element={<Ujian />} />
-        <Route path="/jual" element={<Jual />} />
         <Route path="/bantuan" element={<Bantuan />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/pelajaran1" element={<Pelajaran1 />} />
@@ -74,11 +84,12 @@ function AppLayout() {
         <Route path="/pelajaran7" element={<Pelajaran7 />} />
         <Route path="/pelajaran8" element={<Pelajaran8 />} />
         <Route path="/pelajaran9" element={<Pelajaran9 />} />
-        {/* Halaman Materi dan Karya (untuk semua pengguna yang login) */}
+
+        {/* Halaman Materi dan Karya (hanya jika sudah login) */}
         <Route
           path="/materi"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="user"> {/* Hanya pengguna dengan role "user" */}
               <Materi />
             </ProtectedRoute>
           }
@@ -86,12 +97,11 @@ function AppLayout() {
         <Route
           path="/karya"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="user"> {/* Hanya pengguna dengan role "user" */}
               <Karya />
             </ProtectedRoute>
           }
         />
-        {/* Tambahkan rute lainnya */}
       </Routes>
     </>
   );

@@ -20,7 +20,7 @@ const Register = () => {
 
       if (response.ok) {
         alert("Registrasi berhasil! Silakan login.");
-        navigate("/login"); // Arahkan ke halaman login
+        navigate("/masuk"); // Arahkan ke halaman login
       } else {
         const errorData = await response.json();
         alert(errorData.error || "Gagal mendaftarkan pengguna.");
