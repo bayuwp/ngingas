@@ -17,6 +17,7 @@ import Bantuan from "./pages/Bantuan.js";
 import Materi from "./pages/Materi.js";
 import Karya from "./pages/Karya.js";
 import Profile from "./pages/Profile.js";
+import Keranjang from "./pages/keranjang.js";
 import Pelajaran1 from "./Dashboard/Pelajaran1.js";
 import Pelajaran2 from "./Dashboard/Pelajaran2.js";
 import Pelajaran3 from "./Dashboard/Pelajaran3.js";
@@ -27,6 +28,7 @@ import Pelajaran7 from "./Dashboard/Pelajaran7.js";
 import Pelajaran8 from "./Dashboard/Pelajaran8.js";
 import Pelajaran9 from "./Dashboard/Pelajaran9.js";
 import { Navbar } from "react-bootstrap";
+
 
 function AppLayout() {
   const location = useLocation();
@@ -84,6 +86,7 @@ function AppLayout() {
         <Route path="/pelajaran7" element={<Pelajaran7 />} />
         <Route path="/pelajaran8" element={<Pelajaran8 />} />
         <Route path="/pelajaran9" element={<Pelajaran9 />} />
+        <Route path="/keranjang" element={<Keranjang />} />
 
         {/* Halaman Materi dan Karya (hanya jika sudah login) */}
         <Route

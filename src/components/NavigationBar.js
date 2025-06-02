@@ -98,6 +98,13 @@ const NavigationBar = () => {
             >
               Tentang Saya
             </Link>
+            <Link
+              to="/keranjang"
+              style={styles.dropdownItem}
+              onClick={() => setIsDropdownOpen(false)} // Tutup dropdown setelah klik
+            >
+              Keranjang
+            </Link>
             <button
               onClick={handleLogout}
               style={styles.dropdownItem}

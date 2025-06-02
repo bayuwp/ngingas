@@ -26,14 +26,18 @@ model Materi {
 }
 
 model Produk {
-  id          Int      @id @default(autoincrement())
-  namaProduk  String   @db.VarChar(255)
-  kategori    String   @db.VarChar(255)
-  deskripsi   String   @db.Text
-  foto        String?  @db.VarChar(255) // URL atau path file foto
-  video       String?  @db.VarChar(255) // URL atau path file video
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          Int        @id @default(autoincrement())
+  namaProduk  String     @db.VarChar(255)
+  kategori    String     @db.VarChar(255)
+  deskripsi   String     @db.Text
+  harga       Float      @default(0)
+  foto        String?    @db.VarChar(255) // URL atau path file foto
+  video       String?    @db.VarChar(255) // URL atau path file video
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relasi balik ke tabel Keranjang
+  keranjang   Keranjang[]
 }
 
 model User {
@@ -52,8 +56,21 @@ model Profile {
   foto      String?   // URL foto profil
   kelas     String
   jurusan   String
+  alamat   String?
   createdAt DateTime  @default(now())
 
   userId    Int       @unique
   user      User      @relation(fields: [userId], references: [id])
+}
+
+model Keranjang {
+  id          Int      @id @default(autoincrement())
+  produkId    Int
+  qty         Int
+  subtotal    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relasi ke tabel Produk
+  produk      Produk   @relation(fields: [produkId], references: [id])
 }

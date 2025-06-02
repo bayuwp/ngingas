@@ -10,6 +10,7 @@ const Jual = () => {
         namaProduk: "",
         kategori: "",
         deskripsi: "",
+        harga: "", // Tambahkan harga
     });
 
     const [produkList, setProdukList] = useState([]); // State untuk daftar produk
@@ -43,18 +44,19 @@ const Jual = () => {
         formDataToSend.append("namaProduk", formData.namaProduk);
         formDataToSend.append("kategori", formData.kategori);
         formDataToSend.append("deskripsi", formData.deskripsi);
+        formDataToSend.append("harga", formData.harga); // Tambahkan harga
         if (formData.foto) formDataToSend.append("foto", formData.foto);
         if (formData.video) formDataToSend.append("video", formData.video);
 
         try {
             const response = isEditing
                 ? await fetch(`http://localhost:5001/api/produk/${editId}`, {
-                      method: "PUT",
-                      body: formDataToSend,
-                  })
+                        method: "PUT",
+                        body: formDataToSend,
+                    })
                 : await fetch("http://localhost:5001/api/produk", {
-                      method: "POST",
-                      body: formDataToSend,
+                    method: "POST",
+                    body: formDataToSend,
                   });
 
             if (response.ok) {
@@ -71,6 +73,7 @@ const Jual = () => {
                     namaProduk: "",
                     kategori: "",
                     deskripsi: "",
+                    harga: "", // Reset harga
                 });
                 setIsEditing(false);
                 setEditId(null);
@@ -91,6 +94,7 @@ const Jual = () => {
             namaProduk: produk.namaProduk,
             kategori: produk.kategori,
             deskripsi: produk.deskripsi,
+            harga: produk.harga, // Ambil harga produk
         });
         setIsEditing(true);
         setEditId(id);
@@ -200,6 +204,19 @@ const Jual = () => {
                     <div className="text-muted text-end">{formData.deskripsi.length}/3000</div>
                 </Form.Group>
 
+                <Form.Group className="mb-4">
+                    <Form.Label className="fw-bold text-danger">* Harga</Form.Label>
+                    <Form.Control
+                        type="number"
+                        placeholder="Masukkan harga produk"
+                        name="harga"
+                        value={formData.harga}
+                        onChange={handleChange}
+                        min={0}
+                        step="0.01"
+                    />
+                </Form.Group>
+
                 <Button variant="success" onClick={handleSubmit}>
                     {isEditing ? "Perbarui Produk" : "Kirim Produk"}
                 </Button>
@@ -213,6 +230,7 @@ const Jual = () => {
                             <th>Nama Produk</th>
                             <th>Kategori</th>
                             <th>Deskripsi</th>
+                            <th>Harga</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -223,6 +241,7 @@ const Jual = () => {
                                 <td>{produk.namaProduk}</td>
                                 <td>{produk.kategori}</td>
                                 <td>{produk.deskripsi}</td>
+                                <td>{produk.harga}</td>
                                 <td>
                                     <Button
                                         variant="warning"

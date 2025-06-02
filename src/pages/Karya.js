@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { FaRemoveFormat } from "react-icons/fa";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const Karya = () => {
   const [produkList, setProdukList] = useState([]);
   const [selectedProduk, setSelectedProduk] = useState(null);
+  const [cart, setCart] = useState([]);
+  const location = useLocation();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduk = async () => {
@@ -23,8 +27,38 @@ const Karya = () => {
 
   const generateWhatsAppLink = (produk) => {
     const phoneNumber = "628123456789";
-    const message = `Halo, saya tertarik dengan produk "${produk.judul}". Apakah masih tersedia?`;
+    const message = `Halo, saya tertarik dengan produk "${produk.namaProduk}". Apakah masih tersedia?`;
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  };
+
+  const addToCart = async (produk) => {
+    const newItem = {
+      produkId: produk.id,
+      qty: 1,
+    };
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/keranjang`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newItem),
+      });
+
+      if (!response.ok) {
+        throw new Error("Gagal menambahkan ke keranjang");
+      }
+
+      const data = await response.json();
+      console.log("Berhasil menambahkan ke keranjang:", data);
+
+      setCart((prevCart) => [...prevCart, { ...produk, qty: 1, subtotal: produk.harga }]);
+      alert("Produk berhasil ditambahkan ke keranjang!");
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Gagal menambahkan ke keranjang");
+    }
   };
 
   return (
@@ -59,7 +93,7 @@ const Karya = () => {
             >
               <img
                 src={`${BACKEND_URL}${produk.foto}`}
-                alt={produk.judul}
+                alt={produk.namaProduk}
                 style={{
                   width: "100%",
                   height: "200px",
@@ -85,6 +119,9 @@ const Karya = () => {
               <p style={{ color: "#555", fontSize: "0.9rem" }}>
                 {produk.deskripsi.substring(0, 100)}...
               </p>
+              <p style={{ color: "#004080", fontWeight: "bold", fontSize: "1rem" }}>
+                Harga: Rp {produk.harga.toLocaleString("id-ID")}
+              </p>
             </div>
           ))}
         </div>
@@ -106,7 +143,9 @@ const Karya = () => {
           </button>
 
           <h2 style={{ color: "#004080" }}>{selectedProduk.namaProduk}</h2>
-
+          <p style={{ color: "#004080", fontWeight: "bold", fontSize: "1.2rem", marginBottom: "20px" }}>
+            Harga: Rp {selectedProduk.harga.toLocaleString("id-ID")}
+          </p>
           <img
             src={`${BACKEND_URL}${selectedProduk.foto}`}
             alt={selectedProduk.namaProduk}
@@ -119,7 +158,6 @@ const Karya = () => {
             }}
           />
 
-          {/* Tampilkan video jika tersedia */}
           {selectedProduk.video && (
             <div style={{ marginBottom: "20px" }}>
               <h3 style={{ color: "#004080", marginBottom: "10px" }}>Video Karya</h3>
@@ -168,10 +206,44 @@ const Karya = () => {
               borderRadius: "4px",
               fontWeight: "bold",
               textAlign: "center",
+              marginRight: "10px",
             }}
           >
             Keranjang (WhatsApp)
           </a>
+          <button
+            onClick={() => addToCart(selectedProduk)}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "#25D366",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              marginRight: "10px",
+            }}
+          >
+            Tambah ke Keranjang
+          </button>
+          <button
+            onClick={() => {
+              console.log("Data keranjang yang dikirim:", cart);
+              navigate("/keranjang", { state: { cart } });
+            }}
+            style={{
+              marginTop: "20px",
+              padding: "10px 20px",
+              backgroundColor: "#004080",
+              color: "#fff",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+            }}
+          >
+            Lihat Keranjang
+          </button>
         </div>
       )}
     </div>

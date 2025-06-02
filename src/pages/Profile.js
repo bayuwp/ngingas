@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 const Profile = () => {
   const [nama, setNama] = useState("");
   const [foto, setFoto] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState(null); // Untuk pratinjau foto
+  const [fotoPreview, setFotoPreview] = useState(null);
   const [kelas, setKelas] = useState("");
   const [jurusan, setJurusan] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // State untuk loading
+  const [alamat, setAlamat] = useState(""); // Tambahan: alamat
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Ambil data profil dari backend
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -24,6 +24,7 @@ const Profile = () => {
           setFotoPreview(data.foto || "/path/to/default-avatar.png");
           setKelas(data.kelas || "");
           setJurusan(data.jurusan || "");
+          setAlamat(data.alamat || ""); // Ambil data alamat dari backend
         } else {
           console.error("Gagal mengambil data profil");
         }
@@ -39,7 +40,7 @@ const Profile = () => {
     const file = e.target.files[0];
     if (file) {
       setFoto(file);
-      setFotoPreview(URL.createObjectURL(file)); // Pratinjau foto
+      setFotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -52,6 +53,7 @@ const Profile = () => {
     if (foto) formData.append("foto", foto);
     formData.append("kelas", kelas);
     formData.append("jurusan", jurusan);
+    formData.append("alamat", alamat); // Tambahkan alamat ke FormData
 
     try {
       const response = await fetch("http://localhost:5001/api/profile", {
@@ -63,14 +65,14 @@ const Profile = () => {
       });
 
       if (response.ok) {
-        const data = await response.json(); // Ambil respons dari backend
+        const data = await response.json();
         setNama(data[0].username || "");
         setFotoPreview(data[0].foto || "/path/to/default-avatar.png");
         setKelas(data[0].kelas || "");
         setJurusan(data[0].jurusan || "");
+         setAlamat(data.alamat || ""); // Update alamat setelah submit
         alert("Profil berhasil disimpan!");
-
-        window.location.reload(); // Refresh halaman
+        window.location.reload();
       } else {
         alert("Gagal menyimpan profil.");
       }
@@ -109,9 +111,10 @@ const Profile = () => {
           type="file"
           accept="image/*"
           onChange={handleFotoChange}
-          style={{ display: "none" }} // Sembunyikan input file
+          style={{ display: "none" }}
         />
       </div>
+
       <form onSubmit={handleSubmit} style={{ maxWidth: "400px", margin: "0 auto" }}>
         <div style={{ marginBottom: "15px" }}>
           <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>Nama:</label>
@@ -158,6 +161,24 @@ const Profile = () => {
             required
           />
         </div>
+
+        {/* Tambahan input alamat */}
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}>Alamat:</label>
+          <textarea
+            value={alamat}
+            onChange={(e) => setAlamat(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              borderRadius: "5px",
+              border: "1px solid #ddd",
+              minHeight: "80px",
+            }}
+            required
+          />
+        </div>
+
         <button
           type="submit"
           style={{

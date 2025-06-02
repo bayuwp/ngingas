@@ -7,13 +7,16 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import axios from 'axios';
+
+
 
 // Definisikan __dirname secara manual
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const app = express();
 const prisma = new PrismaClient();
+
 
 const SECRET_KEY = 'your_secret_key'; // Ganti dengan secret key Anda
 
@@ -200,10 +203,7 @@ app.post('/api/upload/materi', upload.fields([
 
 // Endpoint untuk menambahkan produk baru dengan file
 app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
-  console.log(req.body); // Log data yang diterima
-  console.log(req.files); // Log file yang diterima
-
-  const { namaProduk, kategori, deskripsi } = req.body;
+  const { namaProduk, kategori, deskripsi, harga } = req.body; // Tambahkan harga
   const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
   const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
 
@@ -213,30 +213,26 @@ app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), as
         namaProduk,
         kategori,
         deskripsi,
+        harga: parseFloat(harga), // Simpan harga sebagai Float
         foto,
         video,
       },
     });
     res.status(201).json(newProduk);
   } catch (error) {
-    console.error(error);
+    console.error('Error saat menyimpan produk:', error);
     res.status(500).json({ error: 'Gagal menyimpan produk.' });
   }
 });
 
 app.get('/api/produk', async (req, res) => {
-  try {
-    const produkList = await prisma.produk.findMany();
-    res.status(200).json(produkList);
-  } catch (error) {
-    console.error('Gagal mengambil data produk:', error);
-    res.status(500).json({ error: 'Gagal mengambil data produk' });
-  }
+  const produk = await prisma.produk.findMany();
+  res.json(produk);
 });
 
 app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
   const { id } = req.params;
-  const { namaProduk, kategori, deskripsi } = req.body;
+  const { namaProduk, kategori, deskripsi, harga } = req.body; // Tambahkan harga
   const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
   const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
 
@@ -247,14 +243,32 @@ app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]),
         namaProduk,
         kategori,
         deskripsi,
+        harga: parseFloat(harga), // Perbarui harga
         ...(foto && { foto }),
         ...(video && { video }),
       },
     });
     res.status(200).json(updatedProduk);
   } catch (error) {
-    console.error(error);
+    console.error('Error saat memperbarui produk:', error);
     res.status(500).json({ error: 'Gagal memperbarui produk.' });
+  }
+});
+
+// Endpoint untuk menghapus produk
+app.delete('/api/produk/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Hapus produk berdasarkan ID
+    await prisma.produk.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.status(200).json({ message: 'Produk berhasil dihapus' });
+  } catch (error) {
+    console.error('Error saat menghapus produk:', error);
+    res.status(500).json({ error: 'Gagal menghapus produk.' });
   }
 });
 
@@ -292,6 +306,7 @@ app.post('/api/register', async (req, res) => {
         username: username, 
         kelas: '', // Atau ambil dari input jika ada
         jurusan: '', // Atau ambil dari input jika ada
+        alamat: '',
         foto: null, // Atau ambil dari input jika ada
       },
     });
@@ -343,7 +358,7 @@ app.post("/api/profile", authenticated, upload.single("foto"), async (req, res) 
   // Ambil data dari request body dan file yang diupload
   console.log("Request body:", req.body); // Menampilkan request body di console
 
-  const { nama, kelas, jurusan } = req.body;
+  const { nama, kelas, jurusan, alamat } = req.body;
   const fotoPath = req.file ? `/images/${req.file.filename}` : null; // Jika ada file, ambil path file
 
   try {
@@ -354,19 +369,21 @@ app.post("/api/profile", authenticated, upload.single("foto"), async (req, res) 
 
     // Perbarui atau buat profil baru dengan menggunakan upsert
     const updatedProfile = await prisma.profile.upsert({
-      where: { userId: req.headers.user.id }, // Gunakan ID pengguna dari token (pastikan token valid)
+      where: { userId: req.headers.user.id },
       update: {
         username: nama,
         kelas,
         jurusan,
-        foto: fotoPath || undefined, // Perbarui hanya jika ada foto baru
+        alamat, // Pastikan alamat diterima dengan benar
+        foto: fotoPath || undefined,
       },
       create: {
-        userId: req.headers.user.id, // Buat profil baru jika belum ada
+        userId: req.headers.user.id,
         username: nama,
         kelas,
         jurusan,
-        foto: fotoPath, // Masukkan foto jika ada
+        alamat, // Pastikan alamat diterima dengan benar
+        foto: fotoPath,
       },
     });
 
@@ -414,5 +431,77 @@ app.get("/api/profile", authenticated, async (req, res) => {
   } catch (error) {
     console.error("Error saat mengambil profil:", error);
     res.status(500).json({ error: "Gagal mengambil profil" });
+  }
+});
+
+// Endpoint untuk menambahkan ke keranjang
+app.post('/api/keranjang', async (req, res) => {
+  const { produkId, qty } = req.body;
+
+  try {
+    // Cari produk berdasarkan ID
+    const produk = await prisma.produk.findUnique({
+      where: { id: produkId },
+    });
+
+    if (!produk) {
+      return res.status(404).json({ error: 'Produk tidak ditemukan' });
+    }
+
+    // Hitung subtotal
+    const subtotal = produk.harga * qty;
+
+    // Tambahkan item ke keranjang
+    const keranjangItem = await prisma.keranjang.create({
+      data: {
+        produkId,
+        qty,
+        subtotal,
+      },
+    });
+
+    res.status(201).json(keranjangItem);
+  } catch (error) {
+    console.error('Error menambahkan ke keranjang:', error);
+    res.status(500).json({ error: 'Gagal menambahkan ke keranjang' });
+  }
+});
+
+app.get('/api/keranjang', async (req, res) => {
+  try {
+    const keranjang = await prisma.keranjang.findMany({
+      include: {
+        produk: true, // Pastikan relasi ke tabel produk disertakan jika diperlukan
+      },
+    });
+    const formattedKeranjang = keranjang.map((item) => ({
+      id: item.id,
+      nama: item.produk.namaProduk, // Pastikan nama produk diambil dari relasi
+      foto: `${item.produk.foto}`, // Pastikan foto produk diambil dari relasi
+      harga: item.produk.harga, // Harga produk
+      qty: item.qty,
+      subtotal: item.qty * item.produk.harga, // Hitung subtotal
+    }));
+    res.json(formattedKeranjang);
+  } catch (error) {
+    console.error("Error fetching keranjang:", error);
+    res.status(500).json({ error: "Gagal mengambil data keranjang" });
+  }
+});
+
+app.use(cors());
+
+app.get('/api/provinces', async (req, res) => {
+  try {
+    const response = await axios.get('https://api.rajaongkir.com/starter/province', {
+      headers: {
+        key: 'BbGYhRdG14dd8a53df9df14dvHswcbMc' // ← langsung disini untuk test
+      }
+    });
+
+    res.json(response.data.rajaongkir.results);
+  } catch (error) {
+    console.error(error?.response?.data || error.message);
+    res.status(500).json({ error: 'Gagal mengambil data provinsi' });
   }
 });
