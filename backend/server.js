@@ -8,6 +8,8 @@ import jwt from 'jsonwebtoken';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import axios from 'axios';
+import midtransClient from "midtrans-client";
+
 
 
 
@@ -17,7 +19,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const prisma = new PrismaClient();
 
-
+const serverKey = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-MNp1PxxZI9lWFIoIKEhD5Cl_";
 const SECRET_KEY = 'your_secret_key'; // Ganti dengan secret key Anda
 
 // Middleware untuk memeriksa autentikasi dan role admin
@@ -491,17 +493,120 @@ app.get('/api/keranjang', async (req, res) => {
 
 app.use(cors());
 
-app.get('/api/provinces', async (req, res) => {
+app.get('/api/province', async (req, res) => {
   try {
     const response = await axios.get('https://api.rajaongkir.com/starter/province', {
       headers: {
-        key: 'BbGYhRdG14dd8a53df9df14dvHswcbMc' // ← langsung disini untuk test
+        key: 'c17e38503e9c5a84671481e249d6d9c4' // gunakan API key kamu di sini
       }
     });
-
-    res.json(response.data.rajaongkir.results);
+    res.json(response.data);
   } catch (error) {
-    console.error(error?.response?.data || error.message);
-    res.status(500).json({ error: 'Gagal mengambil data provinsi' });
+    res.status(500).json({ message: 'Gagal mengambil data provinsi', error: error.message });
   }
 });
+
+// app.listen(PORT, () => {
+//   console.log(`Backend proxy berjalan di http://localhost:${PORT}`);
+// });
+
+app.get('/api/city', async (req, res) => {
+  const provinceId = req.query.province; // ambil query parameter 'province'
+
+  if (!provinceId) {
+    return res.status(400).json({ message: 'Parameter province wajib diisi' });
+  }
+
+  try {
+    const response = await axios.get(`https://api.rajaongkir.com/starter/city?province=${provinceId}`, {
+      headers: {
+        key: 'c17e38503e9c5a84671481e249d6d9c4' // API key kamu
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal mengambil data kota', error: error.message });
+  }
+});
+
+app.post('/api/cost', async (req, res) => {
+  const { origin, destination, weight, courier } = req.body;
+
+  try {
+    const response = await axios.post(
+      'https://api.rajaongkir.com/starter/cost',
+      {
+        origin,
+        destination,
+        weight,
+        courier
+      },
+      {
+        headers: {
+          key: 'c17e38503e9c5a84671481e249d6d9c4',
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: 'Gagal menghitung ongkir', error: error.message });
+  }
+});
+
+const snap = new midtransClient.Snap({
+  isProduction: false,
+  serverKey: 'SB-Mid-server-MNp1PxxZI9lWFIoIKEhD5Cl_',
+  clientKey: 'SB-Mid-client-GL6oCvkjMi9-Iy5t',
+});
+
+app.post('/api/midtrans/checkout', async (req, res) => {
+  const { order_id, gross_amount, items } = req.body; // items = array produk [{id, price, quantity, name}]
+
+  const parameter = {
+    transaction_details: {
+      order_id,
+      gross_amount,
+    },
+    item_details: items, // pastikan ini array objek item
+  };
+
+  try {
+    const transaction = await snap.createTransaction(parameter);
+    res.json({ token: transaction.token });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/api/profile", authenticated, async (req, res) => {
+  try {
+    // Ambil token dari header Authorization
+    console.log("headers req di line 354", req.headers); // Menampilkan user di console
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'Token tidak ditemukan' });
+    }
+
+    // Verifikasi token dan ambil payload (userId)
+    // const decoded = jwt.verify(token, SECRET_KEY);
+    const userId = req.headers.user.id; // Asumsikan bahwa id ada di dalam payload
+
+    // Ambil profile pengguna berdasarkan userId
+    const profile = await prisma.profile.findUnique({
+      where: { id: userId }, // Gunakan userId, bukan id
+      select: { alamat: true },
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: "Profil tidak ditemukan" });
+    }
+
+    res.status(200).json(profile);
+  } catch (error) {
+    console.error("Error saat mengambil profil:", error);
+    res.status(500).json({ error: "Gagal mengambil profil" });
+  }
+});
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
