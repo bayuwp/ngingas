@@ -30,11 +30,7 @@ const Masuk = () => {
         localStorage.setItem('role', data.role); // Menyimpan role di localStorage
         localStorage.setItem('user_id', data.id); // Menyimpan username di localStorage
         console.log('Login berhasil');
-        if (data.role === "admin") {
-          navigate("/admin/dashboard"); // Arahkan ke dashboard admin jika role admin
-        } else if (data.role === "user") {
-          navigate("/dashboard"); // Arahkan ke dashboard user jika role user
-        }
+        navigate("/"); // Arahkan ke halaman awal setelah login berhasil
       } else {
         console.error('Login gagal');
       }

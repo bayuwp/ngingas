@@ -58,7 +58,7 @@ app.use('/videos', express.static(path.join(__dirname, 'public/videos')));
 // Konfigurasi CORS
 const corsOptions = {
   origin: 'http://localhost:3000', // Izinkan hanya dari localhost:3000
-  methods: ['GET', 'POST', 'DELETE'], // Metode HTTP yang diizinkan
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Metode HTTP yang diizinkan
   credentials: true, // Jika Anda menggunakan cookie
 };
 
@@ -98,9 +98,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server berjalan di http://localhost:${PORT}`);
-});
 
 // Endpoint untuk mendapatkan semua materi
 app.get('/api/materi', async (req, res) => {
@@ -205,7 +202,7 @@ app.post('/api/upload/materi', upload.fields([
 
 // Endpoint untuk menambahkan produk baru dengan file
 app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
-  const { namaProduk, kategori, deskripsi, harga } = req.body; // Tambahkan harga
+  const { namaProduk, kategori, deskripsi, harga, userId } = req.body;
   const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
   const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
 
@@ -215,9 +212,10 @@ app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), as
         namaProduk,
         kategori,
         deskripsi,
-        harga: parseFloat(harga), // Simpan harga sebagai Float
+        harga: parseFloat(harga),
         foto,
         video,
+        userId: parseInt(userId),
       },
     });
     res.status(201).json(newProduk);
@@ -228,24 +226,41 @@ app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), as
 });
 
 app.get('/api/produk', async (req, res) => {
-  const produk = await prisma.produk.findMany();
-  res.json(produk);
+  const { userId } = req.query;
+
+  try {
+    const produkList = await prisma.produk.findMany({
+      where: {
+        userId: parseInt(userId),
+      },
+    });
+
+    res.json(produkList);
+  } catch (error) {
+    console.error('Error saat mengambil produk:', error);
+    res.status(500).json({ error: 'Gagal mengambil produk.' });
+  }
 });
 
+// Update produk
 app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
   const { id } = req.params;
-  const { namaProduk, kategori, deskripsi, harga } = req.body; // Tambahkan harga
+  const { namaProduk, kategori, deskripsi, harga, userId } = req.body;
   const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
   const video = req.files.video ? `/videos/${req.files.video[0].filename}` : null;
 
   try {
+    const produk = await prisma.produk.findUnique({ where: { id: parseInt(id) } });
+    if (!produk) return res.status(404).json({ error: 'Produk tidak ditemukan' });
+    if (produk.userId !== parseInt(userId)) return res.status(403).json({ error: 'Anda tidak memiliki izin untuk memperbarui produk ini' });
+
     const updatedProduk = await prisma.produk.update({
       where: { id: parseInt(id) },
       data: {
         namaProduk,
         kategori,
         deskripsi,
-        harga: parseFloat(harga), // Perbarui harga
+        harga: parseFloat(harga),
         ...(foto && { foto }),
         ...(video && { video }),
       },
@@ -260,13 +275,11 @@ app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]),
 // Endpoint untuk menghapus produk
 app.delete('/api/produk/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
-    // Hapus produk berdasarkan ID
-    await prisma.produk.delete({
-      where: { id: parseInt(id) },
-    });
+    const produk = await prisma.produk.findUnique({ where: { id: parseInt(id) } });
+    if (!produk) return res.status(404).json({ error: 'Produk tidak ditemukan' });
 
+    await prisma.produk.delete({ where: { id: parseInt(id) } });
     res.status(200).json({ message: 'Produk berhasil dihapus' });
   } catch (error) {
     console.error('Error saat menghapus produk:', error);

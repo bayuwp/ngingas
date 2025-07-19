@@ -1,56 +1,97 @@
-import { Container, Button, Card, Row, Col } from "react-bootstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Container, Button, Card, Row, Col, Carousel } from "react-bootstrap";
+import slide1 from '../assets/images/bg/slide.jpg';
+import slide2 from '../assets/images/bg/slide2.jpg';
+import slide3 from '../assets/images/bg/slide3.jpg';
 
 const HalamanAwal = () => {
   return (
     <div>
-      {/* Bagian Teks Selamat Datang */}
-      <div style={{ padding: "20px", textAlign: "center" }}>
-        <h1>Halaman Awal</h1>
-        <p>Selamat datang di EduLogamSMK!</p>
-      </div>
-
-      {/* Bagian Kampung Logam */}
-      <div className="kampung-logam-page" style={{
-        backgroundImage: "url('https://source.unsplash.com/1600x900/?factory,metal')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        color: "#fff",
-        textAlign: "center",
-        padding: "20px"
-      }}>
-        <Container>
+      {/* Hero Section: Carousel dengan Teks di Depan */}
+      <div style={{ position: "relative", width: "100%", height: "650px", marginBottom: "32px" }}>
+        <Carousel fade interval={3000} controls={false} indicators={false} style={{ height: "650px" }}>
+          <Carousel.Item>
+            <img
+              className="d-block w-100"
+              src={slide1}
+              alt="Slide 1"
+              style={{ objectFit: "cover", height: "650px" }}
+            />
+          </Carousel.Item>
+          <Carousel.Item>
+            <img
+              className="d-block w-100"
+              src={slide2}
+              alt="Slide 2"
+              style={{ objectFit: "cover", height: "650px" }}
+            />
+          </Carousel.Item>
+          <Carousel.Item>
+            <img
+              className="d-block w-100"
+              src={slide3}
+              alt="Slide 3"
+              style={{ objectFit: "cover", height: "650px" }}
+            />
+          </Carousel.Item>
+        </Carousel>
+        {/* Overlay teks di tengah carousel */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            color: "#fff",
+            background: "rgba(0,0,0,0.35)",
+            textAlign: "center",
+            zIndex: 2,
+            pointerEvents: "none" // agar klik tetap ke carousel
+          }}
+        >
           <h1 style={{
-            fontSize: "4rem",
+            fontSize: "3rem",
             fontWeight: "bold",
-            textShadow: "2px 2px 8px rgba(0, 0, 0, 0.7)",
-            letterSpacing: "2px"
+            textShadow: "2px 2px 8px rgba(0,0,0,0.7)",
+            letterSpacing: "2px",
+            marginBottom: "16px"
           }}>
             Desa Ngingas:<br />Kampung Logam
           </h1>
           <p style={{
             fontSize: "1.2rem",
             maxWidth: "600px",
+            margin: "0 auto 16px auto",
             padding: "10px",
             borderRadius: "12px",
-            backgroundColor: "rgba(0, 0, 0, 0.5)"
+            backgroundColor: "rgba(0,0,0,0.25)",
+            display: "inline-block"
           }}>
             Jelajahi potensi Desa Ngingas, di mana tangan terampil membentuk logam menjadi karya penuh inspirasi, dari peralatan rumah tangga hingga ornamen unik yang berkelas.
           </p>
-          <Button style={{
-            backgroundColor: "#006400",
-            border: "none",
-            padding: "10px 20px",
-            borderRadius: "20px",
-            fontWeight: "600"
-          }}>
+          <Button
+            style={{
+              backgroundColor: "#006400",
+              border: "none",
+              padding: "10px 20px",
+              borderRadius: "20px",
+              fontWeight: "600",
+              marginTop: "12px",
+              pointerEvents: "auto" // agar tombol bisa diklik
+            }}
+          >
             JELAJAHI
           </Button>
-        </Container>
+        </div>
       </div>
+
+      {/* Bagian Kampung Logam */}
+
       <Container>
           <Row>
             {[
@@ -98,7 +139,7 @@ const HalamanAwal = () => {
           </Row>
           <Row className="mt-5">
             <Col md={6}>
-              <img src="/path/to/image.png" alt="Desa Ngingas" style={{ width: "100%", borderRadius: "12px" }} />
+              <img src={slide2} alt="Desa Ngingas" style={{ width: "100%", borderRadius: "12px" }} />
             </Col>
             <Col md={6}>
               <h2 style={{ fontWeight: "bold" }}>Sejarah Desa Ngingas</h2>
@@ -113,7 +154,7 @@ const HalamanAwal = () => {
         </Container>
 
       {/* Bagian Lokasi Desa Ngingas */}
-      <div style={{ backgroundColor: "#222", color: "#fff", padding: "50px 0" }}>
+      <div style={{ backgroundColor: "#222", color: "#fff", padding: "50px 0", marginTop: "60px" }}>
         <Container>
           <Row className="align-items-center">
             <Col md={6}>
