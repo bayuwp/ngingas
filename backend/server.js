@@ -18,7 +18,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const prisma = new PrismaClient();
-
 const serverKey = process.env.MIDTRANS_SERVER_KEY || "SB-Mid-server-MNp1PxxZI9lWFIoIKEhD5Cl_";
 const SECRET_KEY = 'your_secret_key'; // Ganti dengan secret key Anda
 
@@ -608,5 +607,12 @@ app.get("/api/profile", authenticated, async (req, res) => {
     res.status(500).json({ error: "Gagal mengambil profil" });
   }
 });
+
+// app.get("/api/transactions", (req, res) => {
+//   const transactions = readData(); // Fungsi untuk membaca data dari file JSON atau database
+//   res.json(transactions);
+// });
+
+
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

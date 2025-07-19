@@ -28,6 +28,7 @@ import Pelajaran7 from "./Dashboard/Pelajaran7.js";
 import Pelajaran8 from "./Dashboard/Pelajaran8.js";
 import Pelajaran9 from "./Dashboard/Pelajaran9.js";
 import { Navbar } from "react-bootstrap";
+import TransaksiAdmin from "./Admin/transaksi.js";
 
 
 function AppLayout() {
@@ -59,6 +60,10 @@ function AppLayout() {
               <Jual />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/admin/transaksi"
+          element={<TransaksiAdmin />}
         />
 
         {/* Halaman untuk user */}

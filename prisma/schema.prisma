@@ -74,3 +74,18 @@ model Keranjang {
   // Relasi ke tabel Produk
   produk      Produk   @relation(fields: [produkId], references: [id])
 }
+
+model TransactionHistory {
+  id                Int      @id @default(autoincrement())
+  transactionId     String   @unique
+  userId            Int
+  customerName      String
+  items             Json     // Menyimpan daftar item dalam format JSON
+  totalItems        Int
+  totalPrice        Float
+  paymentMethod     String
+  transactionStatus String
+  shippingStatus    String?  // Opsional
+  notes             String?  // Opsional
+  createdAt         DateTime @default(now())
+}
