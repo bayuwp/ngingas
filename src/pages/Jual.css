@@ -1,0 +1,119 @@
+/* General Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+
+  .modern-container {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+    margin-top: 2rem;
+  }
+
+  .modern-heading {
+    color: #343a40;
+  }
+
+  /* Input Styles */
+  .modern-input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    background-color: #f8f9fa;
+  }
+
+  .modern-input {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .modern-input:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    background-color: #fff;
+  }
+
+  /* Button Styles */
+  .modern-button {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 0.375rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+      border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .modern-button:hover {
+    color: #fff;
+    background-color: #0069d9;
+    border-color: #0062cc;
+  }
+
+  .modern-button-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+  }
+
+  .modern-button-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+  }
+
+  .modern-button-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .modern-button-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+  }
+
+  /* Preview Styles */
+  .modern-preview {
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    background-color: #fff;
+    width: 100%; /* Pastikan preview mengisi seluruh lebar kolom */
+  }
+
+  .modern-preview-image,
+  .modern-preview-video {
+    max-width: 100%; /* Ubah nilai ini sesuai kebutuhan */
+    max-height: 120px; /* Ubah nilai ini sesuai kebutuhan */
+    border-radius: 0.375rem;
+    object-fit: contain; /* Tambahkan properti ini */
+  }
+
+  /* Table Styles */
+  .modern-table {
+    background-color: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+  }
+
+  .modern-table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .modern-table tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+
+  .modern-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }

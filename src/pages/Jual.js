@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Container, Form, Button, Table } from "react-bootstrap";
+import { Container, Form, Button, Table, Row, Col } from "react-bootstrap";
 import { FaVideo, FaImage, FaLink, FaEdit, FaTrash } from "react-icons/fa";
-import Sidebar from "./Sidebar.js";
+import { useNavigate } from 'react-router-dom';
+import './Jual.css'; // Import file CSS
 
 const Jual = () => {
     const [formData, setFormData] = useState({
@@ -10,24 +11,33 @@ const Jual = () => {
         namaProduk: "",
         kategori: "",
         deskripsi: "",
-        harga: "", // Tambahkan harga
+        harga: "",
     });
 
-    const [produkList, setProdukList] = useState([]); // State untuk daftar produk
-    const [isEditing, setIsEditing] = useState(false); // State untuk mode edit
-    const [editId, setEditId] = useState(null); // ID produk yang sedang diedit
+    const [fotoPreview, setFotoPreview] = useState(null);
+    const [videoPreview, setVideoPreview] = useState(null);
+    const [produkList, setProdukList] = useState([]);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const navigate = useNavigate();
 
-    // Fetch data produk dari backend
-    useEffect(() => {
-        const fetchProduk = async () => {
-            try {
-                const response = await fetch("http://localhost:5001/api/produk");
-                const data = await response.json();
-                setProdukList(data);
-            } catch (error) {
-                console.error("Error fetching produk:", error);
+    const fetchProduk = async () => {
+        try {
+            const userId = localStorage.getItem('id');
+            if (!userId) return;
+            const response = await fetch(`http://localhost:5001/api/produk?userId=${userId}`);
+            let data = await response.json();
+            if (data && typeof data === "object" && !Array.isArray(data) && Array.isArray(data.data)) {
+                data = data.data;
             }
-        };
+            setProdukList(Array.isArray(data) ? data : []);
+        } catch (error) {
+            setProdukList([]);
+            console.error("Error fetching produk:", error);
+        }
+    };
+
+    useEffect(() => {
         fetchProduk();
     }, []);
 
@@ -37,35 +47,56 @@ const Jual = () => {
             ...prev,
             [name]: files ? files[0] : value,
         }));
+
+        if (name === "foto" && files) {
+            setFotoPreview(URL.createObjectURL(files[0]));
+        } else if (name === "video" && files) {
+            setVideoPreview(URL.createObjectURL(files[0]));
+        }
     };
 
     const handleSubmit = async () => {
+        const userId = localStorage.getItem('id');
+
+        if (!userId) {
+            navigate('/jual');
+            return;
+        }
+
+        if (!formData.namaProduk || !formData.kategori || !formData.deskripsi || !formData.harga) {
+            alert("Semua field wajib diisi!");
+            return;
+        }
+
         const formDataToSend = new FormData();
         formDataToSend.append("namaProduk", formData.namaProduk);
         formDataToSend.append("kategori", formData.kategori);
         formDataToSend.append("deskripsi", formData.deskripsi);
-        formDataToSend.append("harga", formData.harga); // Tambahkan harga
+        formDataToSend.append("harga", formData.harga);
+        formDataToSend.append("userId", userId);
         if (formData.foto) formDataToSend.append("foto", formData.foto);
         if (formData.video) formDataToSend.append("video", formData.video);
 
         try {
-            const response = isEditing
-                ? await fetch(`http://localhost:5001/api/produk/${editId}`, {
-                        method: "PUT",
-                        body: formDataToSend,
-                    })
-                : await fetch("http://localhost:5001/api/produk", {
-                    method: "POST",
-                    body: formDataToSend,
-                  });
+            const url = isEditing
+                ? `http://localhost:5001/api/produk/${editId}`
+                : "http://localhost:5001/api/produk";
+
+            const response = await fetch(url, {
+                method: isEditing ? "PUT" : "POST",
+                body: formDataToSend,
+                // Tidak perlu headers Authorization
+            });
+
+            let savedProduk = null;
+            try {
+                savedProduk = await response.json();
+            } catch (err) {
+                alert("Gagal parsing response dari server. Cek backend.");
+                return;
+            }
 
             if (response.ok) {
-                const savedProduk = await response.json();
-                setProdukList((prev) =>
-                    isEditing
-                        ? prev.map((produk) => (produk.id === savedProduk.id ? savedProduk : produk))
-                        : [...prev, savedProduk]
-                );
                 alert(isEditing ? "Produk berhasil diperbarui!" : "Produk berhasil disimpan!");
                 setFormData({
                     foto: null,
@@ -73,12 +104,15 @@ const Jual = () => {
                     namaProduk: "",
                     kategori: "",
                     deskripsi: "",
-                    harga: "", // Reset harga
+                    harga: "",
                 });
                 setIsEditing(false);
                 setEditId(null);
+                setFotoPreview(null);
+                setVideoPreview(null);
+                fetchProduk();
             } else {
-                alert("Gagal menyimpan produk.");
+                alert(`Gagal menyimpan produk: ${savedProduk.error || 'Terjadi kesalahan'}`);
             }
         } catch (error) {
             console.error("Error:", error);
@@ -94,7 +128,7 @@ const Jual = () => {
             namaProduk: produk.namaProduk,
             kategori: produk.kategori,
             deskripsi: produk.deskripsi,
-            harga: produk.harga, // Ambil harga produk
+            harga: produk.harga,
         });
         setIsEditing(true);
         setEditId(id);
@@ -106,11 +140,20 @@ const Jual = () => {
                 const response = await fetch(`http://localhost:5001/api/produk/${id}`, {
                     method: "DELETE",
                 });
+
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (err) {
+                    alert("Gagal parsing response dari server. Cek backend.");
+                    return;
+                }
+
                 if (response.ok) {
                     alert("Produk berhasil dihapus!");
-                    setProdukList((prev) => prev.filter((produk) => produk.id !== id));
+                    fetchProduk(); // Refetch produk setelah hapus
                 } else {
-                    alert("Gagal menghapus produk.");
+                    alert(data.error || "Gagal menghapus produk.");
                 }
             } catch (error) {
                 console.error("Error:", error);
@@ -120,151 +163,164 @@ const Jual = () => {
     };
 
     return (
-        <div className="d-flex">
-            {/* Sidebar */}
-            <Sidebar />
+        <Container className="py-5 modern-container">
+            <h2 className="fw-bold mb-4 modern-heading">Jual Produk</h2>
 
-            {/* Konten Utama */}
-            <Container className="py-5" style={{ marginLeft: "90px", maxWidth: "800px" }}>
-                <h2 className="fw-bold mb-4">Jual Produk</h2>
+            <Row>
+                <Col xs={12} md={7} lg={8} className="mr-lg-5">
+                    {/* Form Produk */}
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold text-danger">* Foto Produk Promosi</Form.Label>
+                        <div className="modern-input-group">
+                            <FaImage size={32} />
+                            <Form.Control
+                                type="file"
+                                accept="image/*"
+                                name="foto"
+                                onChange={handleChange}
+                            />
+                            <small className="text-muted">
+                                Upload Foto 1:1. Foto akan digunakan di halaman promosi, pencarian, dan lainnya.
+                            </small>
+                        </div>
+                    </Form.Group>
 
-                {/* Form Produk */}
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold text-danger">* Foto Produk Promosi</Form.Label>
-                    <div className="border p-3 rounded d-flex align-items-center gap-3 flex-column flex-md-row">
-                        <FaImage size={32} />
-                        <Form.Control
-                            type="file"
-                            accept="image/*"
-                            name="foto"
-                            onChange={handleChange}
-                            style={{ maxWidth: "300px" }}
-                        />
-                        <small className="text-muted">
-                            Upload Foto 1:1. Foto akan digunakan di halaman promosi, pencarian, dan lainnya.
-                        </small>
-                    </div>
-                </Form.Group>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold">Video Produk</Form.Label>
+                        <div className="modern-input-group">
+                            <FaVideo size={32} />
+                            <Form.Control
+                                type="file"
+                                accept="video/mp4"
+                                name="video"
+                                onChange={handleChange}
+                            />
+                            <small className="text-muted">
+                                Maks. 30MB, durasi 10–60 detik, resolusi max 1280x1280px, format MP4.
+                            </small>
+                        </div>
+                    </Form.Group>
 
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold">Video Produk</Form.Label>
-                    <div className="border p-3 rounded d-flex align-items-center gap-3 flex-column flex-md-row">
-                        <FaVideo size={32} />
-                        <Form.Control
-                            type="file"
-                            accept="video/mp4"
-                            name="video"
-                            onChange={handleChange}
-                            style={{ maxWidth: "300px" }}
-                        />
-                        <small className="text-muted">
-                            Maks. 30MB, durasi 10–60 detik, resolusi max 1280x1280px, format MP4.
-                        </small>
-                    </div>
-                </Form.Group>
-
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold text-danger">* Nama Produk</Form.Label>
-                    <Form.Control
-                        type="text"
-                        placeholder="Nama Merek + Tipe Produk + Fitur Produk (Bahan, Warna, Ukuran, Variasi)"
-                        name="namaProduk"
-                        value={formData.namaProduk}
-                        onChange={handleChange}
-                        maxLength={255}
-                    />
-                    <div className="text-muted text-end">{formData.namaProduk.length}/255</div>
-                </Form.Group>
-
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold text-danger">* Kategori</Form.Label>
-                    <div className="d-flex align-items-center border rounded px-3 py-2">
-                        <FaLink className="me-2 text-muted" />
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold text-danger">* Nama Produk</Form.Label>
                         <Form.Control
                             type="text"
-                            placeholder="Pilih kategori"
-                            name="kategori"
-                            value={formData.kategori}
+                            placeholder="Nama Merek + Tipe Produk + Fitur Produk (Bahan, Warna, Ukuran, Variasi)"
+                            name="namaProduk"
+                            value={formData.namaProduk}
                             onChange={handleChange}
-                            style={{ border: "none", outline: "none", boxShadow: "none" }}
+                            maxLength={255}
+                            className="modern-input"
                         />
-                    </div>
-                </Form.Group>
+                        <div className="text-muted text-end">{formData.namaProduk.length}/255</div>
+                    </Form.Group>
 
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold text-danger">* Deskripsi Produk</Form.Label>
-                    <Form.Control
-                        as="textarea"
-                        rows={5}
-                        maxLength={3000}
-                        name="deskripsi"
-                        value={formData.deskripsi}
-                        onChange={handleChange}
-                    />
-                    <div className="text-muted text-end">{formData.deskripsi.length}/3000</div>
-                </Form.Group>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold text-danger">* Kategori</Form.Label>
+                        <div className="modern-input-group">
+                            <FaLink className="me-2 text-muted" />
+                            <Form.Control
+                                type="text"
+                                placeholder="Pilih kategori"
+                                name="kategori"
+                                value={formData.kategori}
+                                onChange={handleChange}
+                                className="modern-input"
+                            />
+                        </div>
+                    </Form.Group>
 
-                <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold text-danger">* Harga</Form.Label>
-                    <Form.Control
-                        type="number"
-                        placeholder="Masukkan harga produk"
-                        name="harga"
-                        value={formData.harga}
-                        onChange={handleChange}
-                        min={0}
-                        step="0.01"
-                    />
-                </Form.Group>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold text-danger">* Deskripsi Produk</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={5}
+                            maxLength={3000}
+                            name="deskripsi"
+                            value={formData.deskripsi}
+                            onChange={handleChange}
+                            className="modern-input"
+                        />
+                        <div className="text-muted text-end">{formData.deskripsi.length}/3000</div>
+                    </Form.Group>
 
-                <Button variant="success" onClick={handleSubmit}>
-                    {isEditing ? "Perbarui Produk" : "Kirim Produk"}
-                </Button>
+                    <Form.Group className="mb-4">
+                        <Form.Label className="fw-bold text-danger">* Harga</Form.Label>
+                        <Form.Control
+                            type="number"
+                            placeholder="Masukkan harga produk"
+                            name="harga"
+                            value={formData.harga}
+                            onChange={handleChange}
+                            min={0}
+                            step="0.01"
+                            className="modern-input"
+                        />
+                    </Form.Group>
 
-                {/* Tabel Produk */}
-                <h3 className="fw-bold mt-5">Daftar Produk</h3>
-                <Table striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nama Produk</th>
-                            <th>Kategori</th>
-                            <th>Deskripsi</th>
-                            <th>Harga</th>
-                            <th>Aksi</th>
+                    <Button variant="success" onClick={handleSubmit} className="modern-button">
+                        {isEditing ? "Perbarui Produk" : "Kirim Produk"}
+                    </Button>
+                </Col>
+                <Col xs={12} md={5} lg={4}>
+                    {fotoPreview && (
+                        <div className="mb-4 modern-preview">
+                            <img src={fotoPreview} alt="Preview Foto" className="modern-preview-image" />
+                        </div>
+                    )}
+
+                    {videoPreview && (
+                        <div className="mb-4 modern-preview">
+                            <video src={videoPreview} controls className="modern-preview-video" />
+                        </div>
+                    )}
+                </Col>
+            </Row>
+
+            {/* Tabel Produk */}
+            <h3 className="fw-bold mt-5 modern-heading">Daftar Produk</h3>
+            <Table striped bordered hover className="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Produk</th>
+                        <th>Kategori</th>
+                        <th>Deskripsi</th>
+                        <th>Harga</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {(Array.isArray(produkList) ? produkList : []).map((produk, index) => (
+                        <tr key={produk.id}>
+                            <td>{index + 1}</td>
+                            <td>{produk.namaProduk}</td>
+                            <td>{produk.kategori}</td>
+                            <td>{produk.deskripsi}</td>
+                            <td>{produk.harga}</td>
+                            <td>
+                                <Button
+                                    variant="warning"
+                                    size="sm"
+                                    className="me-2 modern-button modern-button-warning"
+                                    onClick={() => handleEdit(produk.id)}
+                                >
+                                    <FaEdit /> Edit
+                                </Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    className="modern-button modern-button-danger"
+                                    onClick={() => handleDelete(produk.id)}
+                                >
+                                    <FaTrash /> Hapus
+                                </Button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {produkList.map((produk, index) => (
-                            <tr key={produk.id}>
-                                <td>{index + 1}</td>
-                                <td>{produk.namaProduk}</td>
-                                <td>{produk.kategori}</td>
-                                <td>{produk.deskripsi}</td>
-                                <td>{produk.harga}</td>
-                                <td>
-                                    <Button
-                                        variant="warning"
-                                        size="sm"
-                                        className="me-2"
-                                        onClick={() => handleEdit(produk.id)}
-                                    >
-                                        <FaEdit /> Edit
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => handleDelete(produk.id)}
-                                    >
-                                        <FaTrash /> Hapus
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </Container>
-        </div>
+                    ))}
+                </tbody>
+            </Table>
+        </Container>
     );
 };
 

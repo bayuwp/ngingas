@@ -18,61 +18,83 @@ model Materi {
   judul     String
   deskripsi String
   linkVideo String?
-  namaModul String    // Properti ini tidak boleh null
+  namaModul String // Properti ini tidak boleh null
   namaPpt   String?
   namaTugas String?
   gambar    String?
   createdAt DateTime @default(now())
+
+  topik Topik[] // Relasi: Materi punya banyak Topik
+}
+
+model Topik {
+  id        Int     @id @default(autoincrement())
+  judul     String
+  deskripsi String?
+  materiId  Int
+  materi    Materi  @relation(fields: [materiId], references: [id])
+
+  penugasan Penugasan[] // Relasi: Topik punya banyak Penugasan
+}
+
+model Penugasan {
+  id        Int       @id @default(autoincrement())
+  judul     String
+  instruksi String?
+  deadline  DateTime?
+  topikId   Int
+  topik     Topik     @relation(fields: [topikId], references: [id])
 }
 
 model Produk {
-  id          Int        @id @default(autoincrement())
-  namaProduk  String     @db.VarChar(255)
-  kategori    String     @db.VarChar(255)
-  deskripsi   String     @db.Text
-  harga       Float      @default(0)
-  foto        String?    @db.VarChar(255) // URL atau path file foto
-  video       String?    @db.VarChar(255) // URL atau path file video
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // Relasi balik ke tabel Keranjang
-  keranjang   Keranjang[]
+  id         Int         @id @default(autoincrement())
+  namaProduk String      @db.VarChar(255)
+  kategori   String      @db.VarChar(255)
+  deskripsi  String      @db.Text
+  harga      Float       @default(0)
+  foto       String?     @db.VarChar(255)
+  video      String?     @db.VarChar(255)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
+  keranjang  Keranjang[]
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
   password  String
-  role      String    @default("user") // Role untuk membedakan user/admin
-  createdAt DateTime  @default(now())
+  role      String   @default("user") // Role untuk membedakan user/admin
+  createdAt DateTime @default(now())
 
-  profile   Profile?
+  profile Profile?
+  produk  Produk[] // Tambahkan relasi balik ke model Produk
 }
 
 model Profile {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  foto      String?   // URL foto profil
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  foto      String? // URL foto profil
   kelas     String
   jurusan   String
-  alamat   String?
-  createdAt DateTime  @default(now())
+  alamat    String?
+  createdAt DateTime @default(now())
 
-  userId    Int       @unique
-  user      User      @relation(fields: [userId], references: [id])
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Keranjang {
-  id          Int      @id @default(autoincrement())
-  produkId    Int
-  qty         Int
-  subtotal    Float
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  produkId  Int
+  qty       Int
+  subtotal  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relasi ke tabel Produk
-  produk      Produk   @relation(fields: [produkId], references: [id])
+  produk Produk @relation(fields: [produkId], references: [id])
 }
 
 model TransactionHistory {
