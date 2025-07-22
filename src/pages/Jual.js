@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Container, Form, Button, Table, Row, Col } from "react-bootstrap";
 import { FaVideo, FaImage, FaLink, FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import './Jual.css'; // Import file CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './Jual.css'; // Import file CSS custom jika ada
 
 const Jual = () => {
     const [formData, setFormData] = useState({
@@ -21,15 +22,13 @@ const Jual = () => {
     const [editId, setEditId] = useState(null);
     const navigate = useNavigate();
 
+    // Ambil produk milik user yang login
     const fetchProduk = async () => {
         try {
-            const userId = localStorage.getItem('id');
+            const userId = localStorage.getItem('id') || localStorage.getItem('user_id');
             if (!userId) return;
             const response = await fetch(`http://localhost:5001/api/produk?userId=${userId}`);
-            let data = await response.json();
-            if (data && typeof data === "object" && !Array.isArray(data) && Array.isArray(data.data)) {
-                data = data.data;
-            }
+            const data = await response.json();
             setProdukList(Array.isArray(data) ? data : []);
         } catch (error) {
             setProdukList([]);
@@ -41,6 +40,7 @@ const Jual = () => {
         fetchProduk();
     }, []);
 
+    // Handle input form
     const handleChange = (e) => {
         const { name, value, files } = e.target;
         setFormData((prev) => ({
@@ -55,11 +55,13 @@ const Jual = () => {
         }
     };
 
-    const handleSubmit = async () => {
-        const userId = localStorage.getItem('id');
-
+    // Submit form (Create/Update)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const userId = localStorage.getItem('id') || localStorage.getItem('user_id');
         if (!userId) {
-            navigate('/jual');
+            alert("User belum login!");
+            navigate('/login');
             return;
         }
 
@@ -85,16 +87,9 @@ const Jual = () => {
             const response = await fetch(url, {
                 method: isEditing ? "PUT" : "POST",
                 body: formDataToSend,
-                // Tidak perlu headers Authorization
             });
 
-            let savedProduk = null;
-            try {
-                savedProduk = await response.json();
-            } catch (err) {
-                alert("Gagal parsing response dari server. Cek backend.");
-                return;
-            }
+            const savedProduk = await response.json();
 
             if (response.ok) {
                 alert(isEditing ? "Produk berhasil diperbarui!" : "Produk berhasil disimpan!");
@@ -120,6 +115,7 @@ const Jual = () => {
         }
     };
 
+    // Edit produk
     const handleEdit = (id) => {
         const produk = produkList.find((p) => p.id === id);
         setFormData({
@@ -132,8 +128,11 @@ const Jual = () => {
         });
         setIsEditing(true);
         setEditId(id);
+        setFotoPreview(produk.foto ? `http://localhost:5001${produk.foto}` : null);
+        setVideoPreview(produk.video ? `http://localhost:5001${produk.video}` : null);
     };
 
+    // Hapus produk
     const handleDelete = async (id) => {
         if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
             try {
@@ -141,17 +140,11 @@ const Jual = () => {
                     method: "DELETE",
                 });
 
-                let data = null;
-                try {
-                    data = await response.json();
-                } catch (err) {
-                    alert("Gagal parsing response dari server. Cek backend.");
-                    return;
-                }
+                const data = await response.json();
 
                 if (response.ok) {
                     alert("Produk berhasil dihapus!");
-                    fetchProduk(); // Refetch produk setelah hapus
+                    fetchProduk();
                 } else {
                     alert(data.error || "Gagal menghapus produk.");
                 }
@@ -165,102 +158,102 @@ const Jual = () => {
     return (
         <Container className="py-5 modern-container">
             <h2 className="fw-bold mb-4 modern-heading">Jual Produk</h2>
-
             <Row>
                 <Col xs={12} md={7} lg={8} className="mr-lg-5">
-                    {/* Form Produk */}
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold text-danger">* Foto Produk Promosi</Form.Label>
-                        <div className="modern-input-group">
-                            <FaImage size={32} />
-                            <Form.Control
-                                type="file"
-                                accept="image/*"
-                                name="foto"
-                                onChange={handleChange}
-                            />
-                            <small className="text-muted">
-                                Upload Foto 1:1. Foto akan digunakan di halaman promosi, pencarian, dan lainnya.
-                            </small>
-                        </div>
-                    </Form.Group>
+                    <Form onSubmit={handleSubmit}>
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold text-danger">* Foto Produk Promosi</Form.Label>
+                            <div className="modern-input-group">
+                                <FaImage size={32} />
+                                <Form.Control
+                                    type="file"
+                                    accept="image/*"
+                                    name="foto"
+                                    onChange={handleChange}
+                                />
+                                <small className="text-muted">
+                                    Upload Foto 1:1. Foto akan digunakan di halaman promosi, pencarian, dan lainnya.
+                                </small>
+                            </div>
+                        </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold">Video Produk</Form.Label>
-                        <div className="modern-input-group">
-                            <FaVideo size={32} />
-                            <Form.Control
-                                type="file"
-                                accept="video/mp4"
-                                name="video"
-                                onChange={handleChange}
-                            />
-                            <small className="text-muted">
-                                Maks. 30MB, durasi 10–60 detik, resolusi max 1280x1280px, format MP4.
-                            </small>
-                        </div>
-                    </Form.Group>
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold">Video Produk</Form.Label>
+                            <div className="modern-input-group">
+                                <FaVideo size={32} />
+                                <Form.Control
+                                    type="file"
+                                    accept="video/mp4"
+                                    name="video"
+                                    onChange={handleChange}
+                                />
+                                <small className="text-muted">
+                                    Maks. 30MB, durasi 10–60 detik, resolusi max 1280x1280px, format MP4.
+                                </small>
+                            </div>
+                        </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold text-danger">* Nama Produk</Form.Label>
-                        <Form.Control
-                            type="text"
-                            placeholder="Nama Merek + Tipe Produk + Fitur Produk (Bahan, Warna, Ukuran, Variasi)"
-                            name="namaProduk"
-                            value={formData.namaProduk}
-                            onChange={handleChange}
-                            maxLength={255}
-                            className="modern-input"
-                        />
-                        <div className="text-muted text-end">{formData.namaProduk.length}/255</div>
-                    </Form.Group>
-
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold text-danger">* Kategori</Form.Label>
-                        <div className="modern-input-group">
-                            <FaLink className="me-2 text-muted" />
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold text-danger">* Nama Produk</Form.Label>
                             <Form.Control
                                 type="text"
-                                placeholder="Pilih kategori"
-                                name="kategori"
-                                value={formData.kategori}
+                                placeholder="Nama Merek + Tipe Produk + Fitur Produk (Bahan, Warna, Ukuran, Variasi)"
+                                name="namaProduk"
+                                value={formData.namaProduk}
+                                onChange={handleChange}
+                                maxLength={255}
+                                className="modern-input"
+                            />
+                            <div className="text-muted text-end">{formData.namaProduk.length}/255</div>
+                        </Form.Group>
+
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold text-danger">* Kategori</Form.Label>
+                            <div className="modern-input-group">
+                                <FaLink className="me-2 text-muted" />
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Pilih kategori"
+                                    name="kategori"
+                                    value={formData.kategori}
+                                    onChange={handleChange}
+                                    className="modern-input"
+                                />
+                            </div>
+                        </Form.Group>
+
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold text-danger">* Deskripsi Produk</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={5}
+                                maxLength={3000}
+                                name="deskripsi"
+                                value={formData.deskripsi}
                                 onChange={handleChange}
                                 className="modern-input"
                             />
-                        </div>
-                    </Form.Group>
+                            <div className="text-muted text-end">{formData.deskripsi.length}/3000</div>
+                        </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold text-danger">* Deskripsi Produk</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={5}
-                            maxLength={3000}
-                            name="deskripsi"
-                            value={formData.deskripsi}
-                            onChange={handleChange}
-                            className="modern-input"
-                        />
-                        <div className="text-muted text-end">{formData.deskripsi.length}/3000</div>
-                    </Form.Group>
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold text-danger">* Harga</Form.Label>
+                            <Form.Control
+                                type="number"
+                                placeholder="Masukkan harga produk"
+                                name="harga"
+                                value={formData.harga}
+                                onChange={handleChange}
+                                min={0}
+                                step="0.01"
+                                className="modern-input"
+                            />
+                        </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className="fw-bold text-danger">* Harga</Form.Label>
-                        <Form.Control
-                            type="number"
-                            placeholder="Masukkan harga produk"
-                            name="harga"
-                            value={formData.harga}
-                            onChange={handleChange}
-                            min={0}
-                            step="0.01"
-                            className="modern-input"
-                        />
-                    </Form.Group>
-
-                    <Button variant="success" onClick={handleSubmit} className="modern-button">
-                        {isEditing ? "Perbarui Produk" : "Kirim Produk"}
-                    </Button>
+                        <Button variant="success" type="submit" className="modern-button">
+                            {isEditing ? "Perbarui Produk" : "Kirim Produk"}
+                        </Button>
+                    </Form>
                 </Col>
                 <Col xs={12} md={5} lg={4}>
                     {fotoPreview && (

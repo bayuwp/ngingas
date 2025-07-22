@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Container, Row, Col } from "react-bootstrap"; // Tambahkan ini
-import bg2 from "../assets/images/bg/bg2.jpg"; // pastikan sudah di-import
+import { Container, Row, Col } from "react-bootstrap";
+import bg2 from "../assets/images/bg/bg2.jpg";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = "http://localhost:5001"; // Ganti jika pakai env
 
 const Karya = () => {
   const [produkList, setProdukList] = useState([]);
   const [selectedProduk, setSelectedProduk] = useState(null);
-  const [cart, setCart] = useState([]);
-  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,13 +15,9 @@ const Karya = () => {
       try {
         const response = await fetch(`${BACKEND_URL}/api/produk`);
         let data = await response.json();
-        // Jika data objek dan punya property data (misal { data: [...] }), ambil datanya
-        if (data && typeof data === "object" && !Array.isArray(data) && Array.isArray(data.data)) {
-          data = data.data;
-        }
         setProdukList(Array.isArray(data) ? data : []);
       } catch (error) {
-        setProdukList([]); // fallback agar produkList tetap array
+        setProdukList([]);
         console.error("Gagal mengambil data produk:", error);
       }
     };
@@ -57,7 +51,6 @@ const Karya = () => {
       }
 
       const data = await response.json();
-      setCart((prevCart) => [...prevCart, { ...produk, qty: 1, subtotal: produk.harga }]);
       alert("Produk berhasil ditambahkan ke keranjang!");
     } catch (error) {
       alert("Gagal menambahkan ke keranjang");
@@ -194,7 +187,7 @@ const Karya = () => {
               }}
             >
               <img
-                src={`${BACKEND_URL}${produk.foto}`}
+                src={produk.foto ? `${BACKEND_URL}${produk.foto}` : ""}
                 alt={produk.namaProduk}
                 style={{
                   width: "100%",

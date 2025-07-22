@@ -200,7 +200,9 @@ app.post('/api/upload/materi', upload.fields([
 });
 
 
-// Endpoint untuk menambahkan produk baru dengan file
+// CRUD Produk
+
+// CREATE - Tambah produk baru
 app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
   const { namaProduk, kategori, deskripsi, harga, userId } = req.body;
   const foto = req.files.foto ? `/images/${req.files.foto[0].filename}` : null;
@@ -225,16 +227,21 @@ app.post('/api/produk', upload.fields([{ name: 'foto' }, { name: 'video' }]), as
   }
 });
 
+// READ - Ambil semua produk milik user tertentu
 app.get('/api/produk', async (req, res) => {
   const { userId } = req.query;
-
   try {
-    const produkList = await prisma.produk.findMany({
-      where: {
-        userId: parseInt(userId),
-      },
-    });
-
+    let produkList;
+    if (userId) {
+      produkList = await prisma.produk.findMany({
+        where: { userId: parseInt(userId) },
+        orderBy: { createdAt: 'desc' }
+      });
+    } else {
+      produkList = await prisma.produk.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+    }
     res.json(produkList);
   } catch (error) {
     console.error('Error saat mengambil produk:', error);
@@ -242,7 +249,7 @@ app.get('/api/produk', async (req, res) => {
   }
 });
 
-// Update produk
+// UPDATE - Edit produk
 app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]), async (req, res) => {
   const { id } = req.params;
   const { namaProduk, kategori, deskripsi, harga, userId } = req.body;
@@ -272,7 +279,7 @@ app.put('/api/produk/:id', upload.fields([{ name: 'foto' }, { name: 'video' }]),
   }
 });
 
-// Endpoint untuk menghapus produk
+// DELETE - Hapus produk
 app.delete('/api/produk/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -422,20 +429,9 @@ app.post("/api/profile", authenticated, upload.single("foto"), async (req, res) 
 
 app.get("/api/profile", authenticated, async (req, res) => {
   try {
-    // Ambil token dari header Authorization
-    console.log("headers req di line 354", req.headers); // Menampilkan user di console
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Token tidak ditemukan' });
-    }
-
-    // Verifikasi token dan ambil payload (userId)
-    // const decoded = jwt.verify(token, SECRET_KEY);
-    const userId = req.headers.user.id; // Asumsikan bahwa id ada di dalam payload
-
-    // Ambil profile pengguna berdasarkan userId
+    const userId = req.headers.user.id;
     const profile = await prisma.profile.findUnique({
-      where: { id: userId }, // Gunakan userId, bukan id
+      where: { userId }, // Perbaiki di sini!
     });
 
     if (!profile) {
@@ -594,21 +590,9 @@ app.post('/api/midtrans/checkout', async (req, res) => {
 
 app.get("/api/profile", authenticated, async (req, res) => {
   try {
-    // Ambil token dari header Authorization
-    console.log("headers req di line 354", req.headers); // Menampilkan user di console
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'Token tidak ditemukan' });
-    }
-
-    // Verifikasi token dan ambil payload (userId)
-    // const decoded = jwt.verify(token, SECRET_KEY);
-    const userId = req.headers.user.id; // Asumsikan bahwa id ada di dalam payload
-
-    // Ambil profile pengguna berdasarkan userId
+    const userId = req.headers.user.id;
     const profile = await prisma.profile.findUnique({
-      where: { id: userId }, // Gunakan userId, bukan id
-      select: { alamat: true },
+      where: { userId }, // Perbaiki di sini!
     });
 
     if (!profile) {

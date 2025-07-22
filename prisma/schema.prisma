@@ -59,6 +59,8 @@ model Produk {
   userId     Int
   user       User        @relation(fields: [userId], references: [id])
   keranjang  Keranjang[]
+
+  @@map("Produk") // Menambahkan pemetaan ke tabel Produk
 }
 
 model User {

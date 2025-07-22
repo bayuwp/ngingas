@@ -12,6 +12,8 @@ import DashboardUser from './AdUser/DashboardUser.js';
 import Karya from './pages/Karya.js';
 import Jual from './pages/Jual.js'
 import ProtectedRoute from './components/ProtectedRoute.js';
+import Keranjang from './pages/keranjang.js';
+import Profile from './pages/Profile.js';
 
 
 function App() {
@@ -25,6 +27,9 @@ function App() {
         <Route path="/masuk" element={<Masuk />} />
         <Route path="/register" element={<Register />} />
         <Route path="/mulai-jual" element={<Jual />} />
+        <Route path="/jual" element={<Jual />} />
+        <Route path="/keranjang" element={<Keranjang />} />
+        <Route path="/profile" element={<Profile />} />
 
         {/* Route untuk admin */}
         <Route
@@ -47,7 +52,6 @@ function App() {
         />
 
         {/* Route lain */}
-        <Route path="/jual" element={<Jual />} />
       </Routes>
     </Router>
   );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Container, Row, Col } from "react-bootstrap";
 
 const Keranjang = () => {
   const [cart, setCart] = useState([]);
@@ -203,29 +204,37 @@ const Keranjang = () => {
   const tableStyle = {
     width: "100%",
     borderCollapse: "collapse",
+    background: "#e6f9ed", // hijau muda
   };
   const thStyle = {
     padding: "10px",
-    border: "1px solid #ddd",
+    border: "1px solid #b2f2c2",
     textAlign: "center",
+    backgroundColor: "#28a745", // hijau
+    color: "white",
+    fontWeight: "bold",
+    fontSize: "16px",
   };
   const tdStyle = {
     padding: "10px",
-    border: "1px solid #ddd",
+    border: "1px solid #b2f2c2",
     textAlign: "center",
+    background: "#fff",
   };
   const trStyle = {
     backgroundColor: "#fff",
   };
 
   return (
-    <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: "30px", fontFamily: "Arial, sans-serif", background: "#e6f9ed", minHeight: "100vh" }}>
       <h1
         style={{
           textAlign: "center",
           marginBottom: "30px",
           fontSize: "28px",
-          color: "#333",
+          color: "#28a745",
+          fontWeight: "bold",
+          letterSpacing: "1px",
         }}
       >
         Keranjang Belanja
@@ -233,7 +242,7 @@ const Keranjang = () => {
 
       <div style={{ overflowX: "auto", marginBottom: "20px" }}>
         <table style={tableStyle}>
-          <thead style={{ backgroundColor: "#0d6efd", color: "white" }}>
+          <thead>
             <tr>
               <th style={thStyle}>NO</th>
               <th style={thStyle}>FOTO</th>
@@ -258,7 +267,7 @@ const Keranjang = () => {
                       height: "60px",
                       objectFit: "cover",
                       borderRadius: "6px",
-                      border: "1px solid #ddd",
+                      border: "2px solid #28a745",
                     }}
                   />
                 </td>
@@ -281,7 +290,7 @@ const Keranjang = () => {
                         )
                       )
                     }
-                    style={{ width: "60px", padding: "5px", borderRadius: "4px" }}
+                    style={{ width: "60px", padding: "5px", borderRadius: "4px", border: "1px solid #28a745" }}
                   />
                 </td>
                 <td style={tdStyle}>
@@ -301,6 +310,7 @@ const Keranjang = () => {
                         setSelectedItems([...selectedItems, item.id]);
                       }
                     }}
+                    style={{ accentColor: "#28a745" }}
                   />
                 </td>
                 <td style={tdStyle}>
@@ -310,12 +320,13 @@ const Keranjang = () => {
                       setSelectedItems(selectedItems.filter((id) => id !== item.id));
                     }}
                     style={{
-                      backgroundColor: "#dc3545",
+                      backgroundColor: "#28a745",
                       color: "white",
                       border: "none",
                       borderRadius: "4px",
                       padding: "6px 12px",
                       cursor: "pointer",
+                      fontWeight: "bold",
                     }}
                   >
                     Hapus
@@ -327,7 +338,7 @@ const Keranjang = () => {
         </table>
       </div>
 
-      <div style={{ marginTop: "20px", fontSize: "18px", textAlign: "right" }}>
+      <div style={{ marginTop: "20px", fontSize: "18px", textAlign: "right", color: "#218838" }}>
         <b>Total Belanja: </b> Rp. {calculateTotal().toLocaleString("id-ID")}
       </div>
 
@@ -336,14 +347,16 @@ const Keranjang = () => {
         disabled={selectedItems.length === 0}
         style={{
           marginTop: "20px",
-          backgroundColor: selectedItems.length === 0 ? "#ccc" : "#0d6efd",
+          backgroundColor: selectedItems.length === 0 ? "#b2f2c2" : "#28a745",
           color: "white",
           border: "none",
-          borderRadius: "4px",
+          borderRadius: "6px",
           padding: "12px 25px",
           fontSize: "16px",
           cursor: selectedItems.length === 0 ? "not-allowed" : "pointer",
           float: "right",
+          fontWeight: "bold",
+          boxShadow: "0 2px 8px rgba(40,167,69,0.10)",
         }}
       >
         Bayar
@@ -357,7 +370,7 @@ const Keranjang = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.7)",
+            backgroundColor: "rgba(40,167,69,0.15)",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -367,16 +380,18 @@ const Keranjang = () => {
           <div
             style={{
               backgroundColor: "#fff",
-              padding: "20px",
-              borderRadius: "12px",
+              padding: "28px",
+              borderRadius: "16px",
               width: "90%",
               maxWidth: "600px",
               maxHeight: "90vh",
               overflowY: "auto",
               position: "relative",
+              boxShadow: "0 4px 24px rgba(40,167,69,0.13)",
+              border: "2px solid #28a745",
             }}
           >
-            <h2 style={{ textAlign: "center", marginBottom: "15px" }}>
+            <h2 style={{ textAlign: "center", marginBottom: "15px", color: "#28a745", fontWeight: "bold" }}>
               Detail Pengiriman
             </h2>
 
@@ -595,6 +610,34 @@ const Keranjang = () => {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div style={{ backgroundColor: "#222", color: "#fff", padding: "20px 0", textAlign: "center", marginTop: "40px" }}>
+        <Container>
+          <Row>
+            <Col md={4}>
+              <p>
+                <strong style={{ color: "#28a745" }}>Lokasi:</strong><br />
+                Desa Ngingas, Waru, Sidoarjo
+              </p>
+            </Col>
+            <Col md={4}>
+              <p>
+                <strong style={{ color: "#28a745" }}>Email:</strong><br />
+                desangingas@gmail.com
+              </p>
+            </Col>
+            <Col md={4}>
+              <p>
+                <strong style={{ color: "#28a745" }}>Hubungi Kami:</strong><br />
+                0318535447
+              </p>
+            </Col>
+          </Row>
+          <hr style={{ borderColor: "#444" }} />
+          <p style={{ fontSize: "14px" }}>ⓒ Amrozenk - Universitas Negeri Surabaya</p>
+        </Container>
+      </div>
     </div>
   );
 };

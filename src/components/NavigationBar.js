@@ -165,9 +165,6 @@ const NavigationBar = () => {
             />
             {isDropdownOpen && (
               <div style={styles.dropdownMenu}>
-                <Link to="/bantuan" style={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
-                  Bantuan
-                </Link>
                 <Link to="/profile" style={styles.dropdownItem} onClick={() => setIsDropdownOpen(false)}>
                   Tentang Saya
                 </Link>
