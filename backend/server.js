@@ -501,66 +501,70 @@ app.get('/api/keranjang', async (req, res) => {
 
 app.use(cors());
 
-app.get('/api/province', async (req, res) => {
-  try {
-    const response = await axios.get('https://api.rajaongkir.com/starter/province', {
-      headers: {
-        key: 'c17e38503e9c5a84671481e249d6d9c4' // gunakan API key kamu di sini
-      }
-    });
-    res.json(response.data);
-  } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data provinsi', error: error.message });
-  }
-});
+const KOMERCE_API_KEY = "5XoaLwsR753e358e71ab5a7cnVsBK0aR";
+const KOMERCE_BASE_URL = "https://rajaongkir.komerce.id/api/v1";
 
-// app.listen(PORT, () => {
-//   console.log(`Backend proxy berjalan di http://localhost:${PORT}`);
-// });
-
+// Endpoint untuk mengambil kota berdasarkan province
 app.get('/api/city', async (req, res) => {
-  const provinceId = req.query.province; // ambil query parameter 'province'
-
+  const provinceId = req.query.province;
   if (!provinceId) {
     return res.status(400).json({ message: 'Parameter province wajib diisi' });
   }
-
   try {
-    const response = await axios.get(`https://api.rajaongkir.com/starter/city?province=${provinceId}`, {
-      headers: {
-        key: 'c17e38503e9c5a84671481e249d6d9c4' // API key kamu
+    const response = await axios.get(
+      `${process.env.RAJAONGKIR_BASE_URL}/destination/domestic-destination`,
+      {
+        headers: {
+          Authorization: `Bearer ${KOMERCE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
-    });
-    res.json(response.data);
+    );
+    const cities = response.data.data
+      .filter(item => item.province_id == provinceId)
+      .map(item => ({
+        city_id: item.city_id,
+        city_name: item.city_name,
+        province_id: item.province_id,
+        province: item.province,
+      }));
+    res.json(cities);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal mengambil data kota', error: error.message });
+    console.error(error.response?.data || error.message);
+    res.status(500).json({
+      message: "Gagal mengambil data kota",
+      error: error.response?.data || error.message,
+    });
   }
 });
 
+// Endpoint untuk menghitung ongkir
 app.post('/api/cost', async (req, res) => {
   const { origin, destination, weight, courier } = req.body;
-
+  if (!origin || !destination || !weight || !courier) {
+    return res.status(400).json({ message: "Semua parameter wajib diisi" });
+  }
   try {
     const response = await axios.post(
-      'https://api.rajaongkir.com/starter/cost',
-      {
-        origin,
-        destination,
-        weight,
-        courier
-      },
+      `${KOMERCE_BASE_URL}/shipping-cost/cost`,
+      { origin, destination, weight, courier },
       {
         headers: {
-          key: 'c17e38503e9c5a84671481e249d6d9c4',
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${KOMERCE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
     );
     res.json(response.data);
   } catch (error) {
-    res.status(500).json({ message: 'Gagal menghitung ongkir', error: error.message });
+    console.error(error.response?.data || error.message);
+    res.status(500).json({
+      message: "Gagal menghitung ongkir",
+      error: error.response?.data || error.message,
+    });
   }
 });
+
 
 const snap = new midtransClient.Snap({
   isProduction: false,
@@ -610,6 +614,16 @@ app.get("/api/profile", authenticated, async (req, res) => {
 //   res.json(transactions);
 // });
 
+// Endpoint untuk menghapus item dari keranjang
+app.delete('/api/keranjang/:id', authenticated, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.keranjang.delete({ where: { id: parseInt(id) } });
+    res.status(200).json({ message: 'Item keranjang berhasil dihapus' });
+  } catch (error) {
+    res.status(500).json({ error: 'Gagal menghapus item keranjang' });
+  }
+});
 
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

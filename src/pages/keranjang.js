@@ -22,6 +22,7 @@ const Keranjang = () => {
     addressDetail: "",
   });
   const [shippingCost, setShippingCost] = useState(0);
+  const [username, setUsername] = useState("");
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
@@ -85,28 +86,15 @@ const Keranjang = () => {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProvinces = async () => {
       try {
-        const response = await fetch("http://localhost:5001/api/keranjang");
-        if (!response.ok) throw new Error("Gagal mengambil data keranjang");
-        const data = await response.json();
-        setCart(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        const res = await axios.get("http://localhost:5001/api/province");
+        setProvinsi(res.data?.data || []);
+      } catch (err) {
+        console.error("Gagal mengambil data provinsi:", err);
       }
     };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
-    axios
-      .get("http://localhost:5001/api/province")
-      .then((res) => {
-        if (res.data.rajaongkir?.results) {
-          setProvinsi(res.data.rajaongkir.results);
-        }
-      })
-      .catch((err) => console.error("Gagal mengambil data provinsi:", err));
+    fetchProvinces();
   }, []);
 
   const handleProvinceChange = (type, provinceId) => {
@@ -121,6 +109,7 @@ const Keranjang = () => {
   };
 
   useEffect(() => {
+    // Ambil username dari profile
     fetch(`http://localhost:5001/api/profile`, {
       method: "GET",
       headers: {
@@ -130,6 +119,7 @@ const Keranjang = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        setUsername(data.username);
         setForm((prev) => ({
           ...prev,
           addressDetail: data.alamat || "",
@@ -140,6 +130,22 @@ const Keranjang = () => {
       });
   }, []);
 
+  useEffect(() => {
+    // Ambil keranjang hanya milik username yang login
+    if (!username) return;
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`http://localhost:5001/api/keranjang?username=${username}`);
+        if (!response.ok) throw new Error("Gagal mengambil data keranjang");
+        const data = await response.json();
+        setCart(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, [username]);
+
   const fetchCitiesByProvince = async (provinceId, type) => {
     if (!provinceId || provinceId === "undefined") return;
 
@@ -147,7 +153,7 @@ const Keranjang = () => {
       const response = await axios.get(
         `http://localhost:5001/api/city?province=${provinceId}`
       );
-      const cities = response.data.rajaongkir?.results || [];
+      const cities = response.data.data || [];
 
       if (type === "origin") setCitiesOrigin(cities);
       else if (type === "destination") setCitiesDestination(cities);
@@ -183,7 +189,7 @@ const Keranjang = () => {
         courier: form.courier,
       });
 
-      const options = response.data.rajaongkir.results[0].costs;
+      const options = response.data.data || [];
       setShippingOptions(options);
     } catch (error) {
       alert("Gagal menghitung ongkir");
@@ -315,9 +321,20 @@ const Keranjang = () => {
                 </td>
                 <td style={tdStyle}>
                   <button
-                    onClick={() => {
-                      setCart(cart.filter((cartItem) => cartItem.id !== item.id));
-                      setSelectedItems(selectedItems.filter((id) => id !== item.id));
+                    onClick={async () => {
+                      try {
+                        await fetch(`http://localhost:5001/api/keranjang/${item.id}`, {
+                          method: "DELETE",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+                          },
+                        });
+                        setCart(cart.filter((cartItem) => cartItem.id !== item.id));
+                        setSelectedItems(selectedItems.filter((id) => id !== item.id));
+                      } catch (err) {
+                        alert("Gagal menghapus item keranjang");
+                      }
                     }}
                     style={{
                       backgroundColor: "#28a745",
